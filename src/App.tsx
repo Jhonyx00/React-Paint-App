@@ -1,26 +1,50 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import { useEffect, useRef, useState } from "react";
+import Canvas from "./components/canvas.tsx";
+import { Dimension } from "./interfaces/dimension.ts";
+import "./App.css";
 
-function App() {
+const App = () => {
+  const canvasContainer: React.Ref<HTMLDivElement> = useRef(null);
+  const [parentDimension, setParentDimension] = useState<Dimension>({
+    width: 0,
+    height: 0,
+  });
+
+  useEffect(() => {
+    if (canvasContainer.current) {
+      setParentDimension({
+        width: canvasContainer.current.clientWidth,
+        height: canvasContainer.current.clientHeight,
+      });
+    }
+    const handleWheel = (event: WheelEvent) => {
+      if (event.ctrlKey) {
+        event.preventDefault();
+      }
+    };
+    window.addEventListener("wheel", handleWheel, { passive: false });
+    return () => {
+      window.removeEventListener("wheel", handleWheel);
+    };
+  }, []);
+  console.log(parentDimension);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className="toolbar-canvas-container">
+      <div className="toolbar-container">
+        <div className="tool">tool</div>
+      </div>
+      <div className="canvas-statusbar-container">
+        <div className="canvas-main-container" ref={canvasContainer}>
+          <Canvas
+            width={parentDimension.width}
+            height={parentDimension.height}
+          ></Canvas>
+        </div>
+        <div className="status-bar-container">status</div>
+      </div>
     </div>
   );
-}
+};
 
 export default App;
