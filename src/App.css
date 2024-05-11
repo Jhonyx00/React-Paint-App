@@ -1,41 +1,35 @@
 .toolbar-canvas-container {
-  height: 100vh;
   width: 100%;
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
+  height: 100vh;
+  display: grid;
+  grid-template-columns: 150px calc(100% - 150px);
+  grid-template-rows: repeat(1, 1fr);
 
   .toolbar-container {
-    width: 150px;
     background-color: rgb(237, 237, 237);
     height: 100%;
     overflow: auto;
-    scrollbar-width: none;
-
-    .tools {
-      display: flex;
-      justify-content: center;
-    }
   }
   .canvas-statusbar-container {
-    display: grid;
     width: 100%;
+    height: 100%;
+    display: grid;
     grid-template-rows: 95% 5%;
 
     .canvas-main-container {
       width: 100%;
       height: 100%;
+      display: grid;
+      place-items: end normal;
       overflow: auto;
       scrollbar-width: thin;
-      background-color: rgb(38, 0, 255);
-      display: flex;
-      justify-content: center;
+      background-color: rgb(126, 126, 126);
     }
 
     .status-bar-container {
       display: grid;
       place-items: center;
-      background-color: rgb(255, 255, 255);
+      background-color: rgb(237, 237, 237);
     }
   }
 }
