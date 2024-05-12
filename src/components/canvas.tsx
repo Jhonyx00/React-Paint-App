@@ -158,6 +158,10 @@ const Canvas = ({
         drawTriangle();
         break;
 
+      case "Ellipse":
+        drawEllipse();
+        break;
+
       default:
         break;
     }
@@ -210,6 +214,24 @@ const Canvas = ({
         ctx.lineTo(polygonCoords[i].x, polygonCoords[i].y);
       }
       ctx.closePath();
+      ctx.fill();
+    }
+  };
+
+  const drawEllipse = () => {
+    const { width, height, top, left } = shapeContainer;
+    const endAngle = Math.PI * 2;
+    if (ctx) {
+      ctx.beginPath();
+      ctx.ellipse(
+        left + width * 0.5,
+        top + height * 0.5,
+        Math.abs(width) * 0.5,
+        Math.abs(height) * 0.5,
+        0,
+        0,
+        endAngle
+      );
       ctx.fill();
     }
   };

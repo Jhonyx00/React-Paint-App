@@ -9,7 +9,6 @@ const Tool = ({
 }: any): React.JSX.Element => {
   const handleClick = (tool: CurrentTool) => {
     setCurrentTool(tool);
-    console.log(tool);
   };
 
   return (
