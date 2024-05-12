@@ -1,4 +1,24 @@
-canvas {
+.canvas-container {
+  position: relative !important;
+  overflow: hidden;
+
+  transition: transform 200ms ease;
+  transform-origin: top left;
+  overflow: auto;
+  scrollbar-width: thin;
+}
+
+.canvas {
   background-color: white;
+
+  z-index: 1 !important;
+}
+
+.canvas-shield {
+  position: absolute;
+  top: 0;
+  left: 0;
+
+  z-index: 3 !important;
   cursor: crosshair;
 }

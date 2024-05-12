@@ -1,0 +1,58 @@
+.icon {
+  width: 100%;
+  height: 100%;
+}
+
+.tool-item-container {
+  display: grid;
+  place-items: center;
+  gap: 5px;
+  padding: 5px;
+  box-shadow: 0px 0px 3px 3px lightgray;
+  border-radius: 0.4em;
+  margin: 10px;
+
+  .text {
+    font-size: 14px;
+  }
+
+  .tool {
+    display: grid;
+    place-items: center;
+
+    /* grid-template-columns: repeat(3, 1fr);
+          grid-template-rows: repeat(2, 1fr);
+          padding: 5px;
+          gap: 5px; */
+
+    /*  */
+    button {
+      background-color: transparent;
+      border: none;
+      width: 2em;
+      height: 2em;
+      border-radius: 0.4em;
+      padding: 0.2em;
+    }
+    button:hover:not(.selected-tool) {
+      cursor: pointer;
+      background-color: rgb(205, 205, 205);
+    }
+  }
+
+  .Tools {
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    padding: 5px;
+    gap: 5px;
+  }
+
+  .Shapes {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 5px;
+    height: 101.33px;
+    overflow-y: scroll;
+    scrollbar-width: thin;
+    padding: 5px;
+  }
+}

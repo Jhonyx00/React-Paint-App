@@ -10,13 +10,14 @@ import eraser from "./assets/eraser.svg";
 import oval from "./assets/oval.svg";
 import rectangle from "./assets/rectangle.svg";
 
-const DynamicComponent = () => {
-  return (
-    <div className="main-container">
-      <h1>Dynamic component</h1>
-    </div>
-  );
-};
+import star from "./assets/star.svg";
+
+import rhombus from "./assets/rhombus.svg";
+import pentagon from "./assets/pentagon.svg";
+import hexagon from "./assets/hexagon.svg";
+import triangle from "./assets/triangle.svg";
+
+import Tool from "./components/tool.tsx";
 
 const App = () => {
   const canvasContainer: React.Ref<HTMLDivElement> = useRef(null);
@@ -36,9 +37,12 @@ const App = () => {
     y: 0,
   });
 
-  const [isComponentVisible, setComponentVisible] = useState(false);
-
-  const [toolId, setToolId] = useState(1);
+  const [currentTool, setCurrentTool] = useState<IconTool>({
+    toolGroupID: 3,
+    toolId: 1,
+    name: "Line",
+    icon: pencil,
+  });
 
   useEffect(() => {
     if (canvasContainer.current) {
@@ -66,12 +70,6 @@ const App = () => {
       const x = event.nativeEvent.offsetX;
       const y = event.nativeEvent.offsetY;
       setMouseDownPosition({ x: x, y: y });
-
-      if (isComponentVisible) {
-        setComponentVisible(false);
-      } else {
-        setComponentVisible(true);
-      }
     }
   };
 
@@ -86,11 +84,6 @@ const App = () => {
 
   const handleMouseUp = () => {
     setIsDrawing(false);
-    //setComponentVisible(false);
-  };
-
-  const handleClick = (itemId: number) => {
-    setToolId(itemId);
   };
 
   //list items
@@ -122,49 +115,87 @@ const App = () => {
     },
   ];
 
+  //
+  const shapeItems: IconTool[] = [
+    {
+      toolGroupID: 1,
+      toolId: 1,
+      name: "Rectangle",
+      icon: rectangle,
+    },
+    {
+      toolGroupID: 1,
+      toolId: 2,
+      name: "Ellipse",
+      icon: oval,
+    },
+    {
+      toolGroupID: 1,
+      toolId: 3,
+      name: "Hexagon",
+      icon: hexagon,
+    },
+    {
+      toolGroupID: 1,
+      toolId: 4,
+      name: "Triangle",
+      icon: triangle,
+    },
+    {
+      toolGroupID: 1,
+      toolId: 5,
+      name: "Pentagon",
+      icon: pentagon,
+    },
+    {
+      toolGroupID: 1,
+      toolId: 6,
+      name: "Star",
+      icon: star,
+    },
+
+    {
+      toolGroupID: 1,
+      toolId: 7,
+      name: "Rhombus",
+      icon: rhombus,
+    },
+  ];
+
   return (
     <div className="toolbar-canvas-container">
       <div className="toolbar-container">
-        {/*  */}
-        <div className="tool-item-container">
-          <span className="text">Tools</span>
-
-          <div className="tool">
-            {toolsItems.map((item) => (
-              <button
-                key={item.toolId}
-                onClick={() => handleClick(item.toolId)}
-              >
-                <img className="icon" src={item.icon} alt="" />
-              </button>
-            ))}
-          </div>
-        </div>
-        {/*  */}
+        <Tool
+          toolGroupName={"Tools"}
+          toolItems={toolsItems}
+          setCurrentTool={setCurrentTool}
+        />
+        <Tool
+          toolGroupName={"Shapes"}
+          toolItems={shapeItems}
+          setCurrentTool={setCurrentTool}
+        />
       </div>
 
       <div className="canvas-statusbar-container">
         <div
-          className="canvas-main-container"
           ref={canvasContainer}
+          className="canvas-main-container"
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
         >
-          {/* {isComponentVisible && (
-            <DynamicComponent></DynamicComponent>
-          )} */}
-
           <Canvas
             width={parentDimension.width}
             height={parentDimension.height}
             positionDown={mouseDownPosition}
             positionMove={mouseMovePosition}
-            toolId={toolId}
+            currentTool={currentTool}
           ></Canvas>
         </div>
         <div className="status-bar-container">
-          {parentDimension.width} × {parentDimension.height}pixels
+          {parentDimension.width} × {parentDimension.height}pixels,
+          {currentTool.name}
         </div>
       </div>
     </div>
