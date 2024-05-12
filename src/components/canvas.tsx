@@ -141,8 +141,8 @@ const Canvas = ({
     switch (currentTool.toolGroupID) {
       case 1:
         paintShape();
+        resetShapeContainerProps();
         break;
-
       default:
         break;
     }
@@ -346,6 +346,23 @@ const Canvas = ({
       ctx.closePath();
       ctx.fill();
     }
+  };
+
+  const resetShapeContainerProps = () => {
+    setShapeContainer({
+      top: 0,
+      left: 0,
+      width: 0,
+      height: 0,
+      referenceTop: 0,
+      referenceLeft: 0,
+      referenceWidth: 0,
+      referenceHeight: 0,
+      background: "",
+      componentClass: "",
+      isRendered: false,
+      rotation: 0,
+    });
   };
 
   const setPath = (id: number) => {
