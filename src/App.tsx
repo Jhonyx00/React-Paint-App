@@ -165,24 +165,6 @@ const App = () => {
       name: "Rhombus",
       icon: rhombus,
     },
-    {
-      toolGroupID: 1,
-      toolId: 8,
-      name: "Rhombus",
-      icon: rhombus,
-    },
-    {
-      toolGroupID: 1,
-      toolId: 9,
-      name: "Rhombus",
-      icon: rhombus,
-    },
-    {
-      toolGroupID: 1,
-      toolId: 10,
-      name: "Rhombus",
-      icon: rhombus,
-    },
   ];
 
   return (

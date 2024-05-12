@@ -173,6 +173,11 @@ const Canvas = ({
       case "Star":
         drawStar();
         break;
+
+      case "Rhombus":
+        drawRhombus();
+        break;
+
       default:
         break;
     }
@@ -309,6 +314,27 @@ const Canvas = ({
         { x: left + width * 0.69, y: top + height * 0.59 },
         { x: left + width * 1, y: top + height * 0.38 },
         { x: left + width * 0.63, y: top + height * 0.38 },
+      ];
+
+      ctx.beginPath();
+      ctx.moveTo(polygonCoords[0].x, polygonCoords[0].y);
+
+      for (let i = 0; i < polygonCoords.length; i++) {
+        ctx.lineTo(polygonCoords[i].x, polygonCoords[i].y);
+      }
+      ctx.closePath();
+      ctx.fill();
+    }
+  };
+
+  const drawRhombus = () => {
+    const { width, height, top, left } = shapeContainer;
+    if (ctx) {
+      const polygonCoords: Point[] = [
+        { x: left + width * 0.5, y: top },
+        { x: left, y: top + height * 0.5 },
+        { x: left + width * 0.5, y: top + height },
+        { x: left + width, y: top + height * 0.5 },
       ];
 
       ctx.beginPath();
