@@ -162,6 +162,9 @@ const Canvas = ({
         drawEllipse();
         break;
 
+      case "Pentagon":
+        drawPentagon();
+        break;
       default:
         break;
     }
@@ -232,6 +235,28 @@ const Canvas = ({
         0,
         endAngle
       );
+      ctx.fill();
+    }
+  };
+
+  const drawPentagon = () => {
+    const { width, height, top, left } = shapeContainer;
+    if (ctx) {
+      const polygonCoords: Point[] = [
+        { x: left + width * 0.5, y: top },
+        { x: left, y: top + height * 0.38 },
+        { x: left + width * 0.18, y: top + height },
+        { x: left + width * 0.82, y: top + height },
+        { x: left + width, y: top + height * 0.38 },
+      ];
+
+      ctx.beginPath();
+      ctx.moveTo(polygonCoords[0].x, polygonCoords[0].y);
+
+      for (let i = 0; i < polygonCoords.length; i++) {
+        ctx.lineTo(polygonCoords[i].x, polygonCoords[i].y);
+      }
+      ctx.closePath();
       ctx.fill();
     }
   };
