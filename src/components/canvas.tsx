@@ -165,6 +165,10 @@ const Canvas = ({
       case "Pentagon":
         drawPentagon();
         break;
+
+      case "Hexagon":
+        drawHexagon();
+        break;
       default:
         break;
     }
@@ -188,8 +192,6 @@ const Canvas = ({
         shapeContainer.width,
         shapeContainer.height
       );
-
-      //console.log(canvasRef.current?.toDataURL());
     }
   };
 
@@ -248,6 +250,33 @@ const Canvas = ({
         { x: left + width * 0.18, y: top + height },
         { x: left + width * 0.82, y: top + height },
         { x: left + width, y: top + height * 0.38 },
+      ];
+
+      ctx.beginPath();
+      ctx.moveTo(polygonCoords[0].x, polygonCoords[0].y);
+
+      for (let i = 0; i < polygonCoords.length; i++) {
+        ctx.lineTo(polygonCoords[i].x, polygonCoords[i].y);
+      }
+      ctx.closePath();
+      ctx.fill();
+    }
+  };
+
+  const drawHexagon = () => {
+    const { width, height, top, left } = shapeContainer;
+    /*Numerical values expressed in percentage indicate where to place each point 
+      according to the width and height of aux component:
+      width * 0.25 = 25% of aux component height 
+      */
+    if (ctx) {
+      const polygonCoords: Point[] = [
+        { x: left + width * 0.25, y: top },
+        { x: left, y: top + height * 0.5 },
+        { x: left + width * 0.25, y: top + height },
+        { x: left + width * 0.75, y: top + height },
+        { x: left + width, y: top + height * 0.5 },
+        { x: left + width * 0.75, y: top },
       ];
 
       ctx.beginPath();
