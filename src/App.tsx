@@ -1,23 +1,28 @@
+//React
 import React, { useEffect, useRef, useState } from "react";
+
+//components
 import Canvas from "./components/canvas.tsx";
+import Tool from "./components/tool.tsx";
+
+//Interfaces
 import { Dimension } from "./interfaces/dimension.ts";
-import "./App.css";
 import { Point } from "./interfaces/point.ts";
 import { IconTool } from "./interfaces/IconTool.ts";
 
+//Images
 import pencil from "./assets/pencil.svg";
 import eraser from "./assets/eraser.svg";
 import oval from "./assets/oval.svg";
 import rectangle from "./assets/rectangle.svg";
-
 import star from "./assets/star.svg";
-
 import rhombus from "./assets/rhombus.svg";
 import pentagon from "./assets/pentagon.svg";
 import hexagon from "./assets/hexagon.svg";
 import triangle from "./assets/triangle.svg";
 
-import Tool from "./components/tool.tsx";
+//Styles
+import "./App.css";
 
 const App = () => {
   const canvasContainer: React.Ref<HTMLDivElement> = useRef(null);
@@ -160,19 +165,37 @@ const App = () => {
       name: "Rhombus",
       icon: rhombus,
     },
+    {
+      toolGroupID: 1,
+      toolId: 8,
+      name: "Rhombus",
+      icon: rhombus,
+    },
+    {
+      toolGroupID: 1,
+      toolId: 9,
+      name: "Rhombus",
+      icon: rhombus,
+    },
+    {
+      toolGroupID: 1,
+      toolId: 10,
+      name: "Rhombus",
+      icon: rhombus,
+    },
   ];
 
   return (
     <div className="toolbar-canvas-container">
       <div className="toolbar-container">
         <Tool
-          toolGroupName={"Tools"}
-          toolItems={toolsItems}
+          toolGroupName={"Shapes"}
+          toolItems={shapeItems}
           setCurrentTool={setCurrentTool}
         />
         <Tool
-          toolGroupName={"Shapes"}
-          toolItems={shapeItems}
+          toolGroupName={"Tools"}
+          toolItems={toolsItems}
           setCurrentTool={setCurrentTool}
         />
       </div>

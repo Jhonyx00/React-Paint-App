@@ -20,12 +20,6 @@
     display: grid;
     place-items: center;
 
-    /* grid-template-columns: repeat(3, 1fr);
-          grid-template-rows: repeat(2, 1fr);
-          padding: 5px;
-          gap: 5px; */
-
-    /*  */
     button {
       background-color: transparent;
       border: none;
@@ -50,7 +44,7 @@
   .Shapes {
     grid-template-columns: repeat(3, 1fr);
     gap: 5px;
-    height: 101.33px;
+    height: calc(6em - 5px);
     overflow-y: scroll;
     scrollbar-width: thin;
     padding: 5px;

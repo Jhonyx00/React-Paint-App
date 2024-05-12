@@ -15,7 +15,6 @@ const Tool = ({
   return (
     <div className="tool-item-container">
       <span className="text">{toolGroupName}</span>
-
       <div className={toolGroupName + " tool"}>
         {toolItems.map((item: IconTool) => (
           <button
