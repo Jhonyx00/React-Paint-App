@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+    <!-- Redo -->
+    <path d="M 70,10 L 90,30 L 70,50" style="fill:none;stroke:gray;stroke-width:10" />
+    <path d="M 83,30 Q -20 30 40 90" style="fill:none;stroke:gray;stroke-width:10" />
+</svg>

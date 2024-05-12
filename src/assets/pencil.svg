@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+    <!-- Pencil -->
+    <polygon points="78,2 65,15 85,35 98,22 " style="fill:pink;stroke:black; stroke-width:2" />
+    <polygon points="85,35 65,15 60,20 80,40 " style="fill:gray;stroke:black; stroke-width:2" />
+    <polygon points="60,20 15,65 35,85 80,40" style="fill:goldenrod;stroke:black; stroke-width:2" />
+    <polygon points="8,85 15,92 33.20,85.95 14.05,66.8" style="fill:mistyrose;stroke:black; stroke-width:2" />
+    <polygon points="8,85 5,95 15,92" style="fill:black;stroke:black; stroke-width:2" />
+</svg>

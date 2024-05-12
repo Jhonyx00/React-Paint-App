@@ -1,0 +1,8 @@
+
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+    <!-- Undo-->
+    <path d="M 30,10 L 10,30 L 30,50" style="fill:none;stroke:gray;stroke-width:10" />
+    <path d="M 17,30 Q 120 30 60 90" style="fill:none;stroke:gray;stroke-width:10" />
+
+</svg>
+

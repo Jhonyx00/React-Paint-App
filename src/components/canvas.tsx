@@ -6,22 +6,40 @@ const Canvas: React.FC<any> = ({
   height,
   positionDown,
   positionMove,
+  toolId,
 }) => {
   const canvasRef: React.Ref<HTMLCanvasElement> = useRef(null);
   const [ctx, setContext] = useState<CanvasRenderingContext2D>();
   const [isInside, setIsInside] = useState(false);
-  //init
+
   useEffect(() => {
     if (canvasRef.current) {
       const ctx = canvasRef.current.getContext("2d");
       if (ctx) {
         setContext(ctx);
+        ctx.strokeStyle = "blue";
       }
     }
-  }, []);
+  }, [ctx]);
+
+  useEffect(() => {
+    if (isInside) {
+      switch (toolId) {
+        case 1:
+          drawLine();
+          break;
+
+        case 2:
+          erase();
+          break;
+        default:
+          break;
+      }
+    }
+  }, [positionMove]);
 
   const drawLine = (): void => {
-    if (ctx && isInside) {
+    if (ctx) {
       ctx.beginPath();
       ctx.moveTo(positionDown.x, positionDown.y);
       ctx.lineTo(positionMove.x, positionMove.y);
@@ -31,9 +49,11 @@ const Canvas: React.FC<any> = ({
     }
   };
 
-  useEffect(() => {
-    drawLine();
-  }, [positionMove]);
+  const erase = () => {
+    if (ctx) {
+      ctx.clearRect(positionMove.x, positionMove.y, 20, 20);
+    }
+  };
 
   const handelMouseLeave = () => {
     setIsInside(false);

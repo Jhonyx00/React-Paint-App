@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+    <!-- Eraser -->
+    <polygon points="60,5 20,45 55,80 95,40" style="fill:pink; stroke:black; stroke-width:2"/>
+    <polygon points="20,45 55,80 42,93 7,58" style="fill:white; stroke:black; stroke-width:2"/>
+
+    <line x1="35" y1="100" x2="80" y2="100" style="stroke:black; stroke-width:11"/>
+</svg>
