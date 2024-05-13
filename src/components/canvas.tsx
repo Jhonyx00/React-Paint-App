@@ -45,12 +45,14 @@ const Canvas = ({
   positionDown,
   positionMove,
   currentTool,
+  currentColor,
 }: {
   width: number;
   height: number;
   positionDown: Point;
   positionMove: Point;
   currentTool: IconTool;
+  currentColor: string;
 }) => {
   const canvasRef: React.Ref<HTMLCanvasElement> = useRef(null);
   const dynamicCanvasRef: React.Ref<HTMLCanvasElement> = useRef(null);
@@ -125,15 +127,16 @@ const Canvas = ({
   }, [positionMove]);
 
   useEffect(() => {
+    if (ctx) {
+      ctx.strokeStyle = currentColor;
+      ctx.fillStyle = currentColor;
+      shapeContainer.background = currentColor;
+    }
+
     if (currentTool.toolGroupID === 2) {
       setShapeContainer((s) => ({ ...s, background: "transparent" }));
     } else {
-      setShapeContainer((s) => ({ ...s, background: "blue" })); // set Color from input
-    }
-
-    if (ctx) {
-      ctx.fillStyle = shapeContainer.background;
-      ctx.strokeStyle = shapeContainer.background;
+      //setShapeContainer((s) => ({ ...s, background: currentColor })); // set Color from input
     }
 
     setPath(currentTool.toolId);

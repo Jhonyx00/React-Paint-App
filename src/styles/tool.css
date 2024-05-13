@@ -44,8 +44,8 @@
   .Shapes {
     grid-template-columns: repeat(3, 1fr);
     gap: 5px;
-    height: calc(6em - 5px);
-    overflow-y: scroll;
+    height: 101.32px;
+    overflow: auto;
     scrollbar-width: thin;
     padding: 5px;
   }

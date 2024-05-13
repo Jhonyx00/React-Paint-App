@@ -23,6 +23,7 @@ import triangle from "./assets/triangle.svg";
 
 //Styles
 import "./App.css";
+import ColorPalette from "./components/colorPalette.tsx";
 
 const App = () => {
   const canvasContainer: React.Ref<HTMLDivElement> = useRef(null);
@@ -48,6 +49,8 @@ const App = () => {
     name: "Line",
     icon: pencil,
   });
+
+  const [currentColor, setCurrentColor] = useState("");
 
   useEffect(() => {
     if (canvasContainer.current) {
@@ -180,6 +183,8 @@ const App = () => {
           toolItems={toolsItems}
           setCurrentTool={setCurrentTool}
         />
+
+        <ColorPalette setCurrentColor={setCurrentColor} />
       </div>
 
       <div className="canvas-statusbar-container">
@@ -196,6 +201,7 @@ const App = () => {
             positionDown={mouseDownPosition}
             positionMove={mouseMovePosition}
             currentTool={currentTool}
+            currentColor={currentColor}
           ></Canvas>
         </div>
 

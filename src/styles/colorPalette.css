@@ -1,0 +1,41 @@
+.tool-container {
+  display: grid;
+  place-items: center;
+
+  gap: 5px;
+  padding: 5px;
+  box-shadow: 0px 0px 3px 3px lightgray;
+  border-radius: 0.4em;
+  margin: 10px;
+
+  span {
+    font-size: 14px;
+    text-align: center;
+  }
+  .palette {
+    list-style: none;
+    display: grid;
+    grid-template-rows: repeat(3, 1fr);
+    grid-template-columns: repeat(5, 1fr);
+    .palette-item {
+      width: 1.2em;
+      height: 1.2em;
+      border: none;
+      cursor: pointer;
+    }
+  }
+
+  .color-input-container {
+    display: grid;
+    place-items: center;
+    padding: 5px;
+
+    .color-chooser {
+      cursor: pointer;
+      border: 1px solid gray;
+
+      width: 3em;
+      height: 3em;
+    }
+  }
+}

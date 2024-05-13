@@ -3,8 +3,7 @@
   height: 100vh;
 
   display: grid;
-  place-items: center;
-  grid-template-columns: 130px calc(100% - 130px);
+  grid-template-columns: 150px calc(100% - 150px);
 
   .toolbar-container {
     background-color: rgb(237, 237, 237);
@@ -17,7 +16,6 @@
     grid-template-rows: 95% 5%;
 
     .canvas-main-container {
-      background-color: rgb(39, 7, 103);
       overflow: auto;
       scrollbar-width: thin;
     }
@@ -25,7 +23,7 @@
     .status-bar-container {
       display: grid;
       place-items: center;
-      background-color: rgb(188, 188, 188);
+      background-color: rgb(211, 211, 211);
     }
   }
 }

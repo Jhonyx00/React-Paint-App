@@ -2,7 +2,6 @@
   position: relative !important;
   transition: transform 200ms ease;
   transform-origin: top left;
-  background-color: aqua;
 }
 
 .canvas {
