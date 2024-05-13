@@ -100,10 +100,9 @@ const Canvas = ({
       const ctx = canvasRef.current.getContext("2d");
       if (ctx) {
         setContext(ctx);
-        ctx.strokeStyle = "blue";
       }
     }
-  }, [ctx]);
+  }, []);
 
   useEffect(() => {
     // if (isInside) {
@@ -129,11 +128,12 @@ const Canvas = ({
     if (currentTool.toolGroupID === 2) {
       setShapeContainer((s) => ({ ...s, background: "transparent" }));
     } else {
-      setShapeContainer((s) => ({ ...s, background: "green" })); // set Color from input
+      setShapeContainer((s) => ({ ...s, background: "blue" })); // set Color from input
     }
 
     if (ctx) {
       ctx.fillStyle = shapeContainer.background;
+      ctx.strokeStyle = shapeContainer.background;
     }
 
     setPath(currentTool.toolId);
@@ -450,7 +450,7 @@ const Canvas = ({
   };
 
   return (
-    <div className="canvas-container">
+    <>
       <DynamicComponent
         top={shapeContainer.top}
         left={shapeContainer.left}
@@ -480,7 +480,7 @@ const Canvas = ({
         className="canvas-shield"
         style={{ width: width, height: height }}
       ></div>
-    </div>
+    </>
   );
 };
 

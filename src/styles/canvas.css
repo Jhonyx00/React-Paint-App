@@ -1,16 +1,14 @@
 .canvas-container {
-  position: relative !important;
-  overflow: hidden;
+  /* position: relative !important;
 
   transition: transform 200ms ease;
-  transform-origin: top left;
-  overflow: auto;
-  scrollbar-width: thin;
+  transform-origin: top left; */
+
+  /* height: 100%; */
 }
 
 .canvas {
   background-color: white;
-
   z-index: 1 !important;
 }
 
@@ -18,7 +16,6 @@
   position: absolute;
   top: 0;
   left: 0;
-
   z-index: 3 !important;
   cursor: crosshair;
 }

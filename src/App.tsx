@@ -198,6 +198,7 @@ const App = () => {
             currentTool={currentTool}
           ></Canvas>
         </div>
+
         <div className="status-bar-container">
           {parentDimension.width} × {parentDimension.height}pixels,
           {currentTool.name}
