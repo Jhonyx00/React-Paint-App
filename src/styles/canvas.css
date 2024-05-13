@@ -1,15 +1,14 @@
 .canvas-container {
-  /* position: relative !important;
-
+  position: relative !important;
   transition: transform 200ms ease;
-  transform-origin: top left; */
-
-  /* height: 100%; */
+  transform-origin: top left;
+  background-color: aqua;
 }
 
 .canvas {
   background-color: white;
   z-index: 1 !important;
+  display: grid;
 }
 
 .canvas-shield {

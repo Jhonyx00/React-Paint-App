@@ -450,7 +450,7 @@ const Canvas = ({
   };
 
   return (
-    <>
+    <div className="canvas-container">
       <DynamicComponent
         top={shapeContainer.top}
         left={shapeContainer.left}
@@ -480,7 +480,7 @@ const Canvas = ({
         className="canvas-shield"
         style={{ width: width, height: height }}
       ></div>
-    </>
+    </div>
   );
 };
 

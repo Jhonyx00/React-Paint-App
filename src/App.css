@@ -17,15 +17,9 @@
     grid-template-rows: 95% 5%;
 
     .canvas-main-container {
-      background-color: rgb(104, 104, 104);
-      display: grid;
-      place-items: start normal;
+      background-color: rgb(39, 7, 103);
       overflow: auto;
       scrollbar-width: thin;
-      position: relative !important;
-
-      transition: transform 200ms ease;
-      transform-origin: top left;
     }
 
     .status-bar-container {
