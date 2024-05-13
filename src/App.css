@@ -3,7 +3,7 @@
   height: 100vh;
 
   display: grid;
-  grid-template-columns: 150px calc(100% - 150px);
+  grid-template-columns: 130px calc(100% - 130px);
 
   .toolbar-container {
     background-color: rgb(237, 237, 237);
@@ -14,6 +14,7 @@
     height: 100%;
     display: grid;
     grid-template-rows: 95% 5%;
+    background-color: rgb(158, 158, 158);
 
     .canvas-main-container {
       overflow: auto;

@@ -11,7 +11,7 @@ import { ShapeContainer } from "../interfaces/shapeContainer";
 import "../styles/canvas.css";
 
 const DynamicComponent = forwardRef((shapeContainer: ShapeContainer, ref) => {
-  const auxCanvasRef: React.Ref<HTMLCanvasElement> = useRef(null);
+  const auxCanvasRef = useRef<HTMLCanvasElement>(null);
   const [ctxAux, setContext] = useState<CanvasRenderingContext2D>();
   const ctxAuxCanvas = auxCanvasRef.current?.getContext("2d");
 

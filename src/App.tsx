@@ -26,7 +26,7 @@ import "./App.css";
 import ColorPalette from "./components/colorPalette.tsx";
 
 const App = () => {
-  const canvasContainer: React.Ref<HTMLDivElement> = useRef(null);
+  const canvasContainer = useRef<HTMLDivElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [parentDimension, setParentDimension] = useState<Dimension>({
     width: 0,
