@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import "../styles/colorPalette.css";
 
 const ColorPalette = ({ setCurrentColor }: any): React.JSX.Element => {
@@ -19,14 +20,20 @@ const ColorPalette = ({ setCurrentColor }: any): React.JSX.Element => {
     { id: 15, color: "#abdaf4" },
   ];
 
+  const inputRef = useRef<HTMLInputElement>(null);
+
   const handleClick = (color: string) => {
     setCurrentColor(color);
+
+    if (inputRef.current) {
+      inputRef.current.value = color;
+    }
   };
 
   const handleChange = (event: { target: any }) => {
-    //console.log(event.target.value);
     setCurrentColor(event.target.value);
   };
+
   return (
     <div className="tool-container">
       <span>Color</span>
@@ -44,6 +51,7 @@ const ColorPalette = ({ setCurrentColor }: any): React.JSX.Element => {
 
       <div className="color-input-container">
         <input
+          ref={inputRef}
           type="color"
           name="color"
           id="color-chooser"
