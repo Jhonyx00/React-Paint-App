@@ -7,6 +7,7 @@ import { ShapeContainer } from "../interfaces/shapeContainer";
 
 //styles
 import "../styles/canvas.css";
+import { Position } from "../interfaces/position";
 
 const Canvas = ({
   width,
@@ -16,6 +17,7 @@ const Canvas = ({
   isDrawing,
   currentTool,
   currentColor,
+  canvasPosition,
   setCurrentShape,
 }: {
   width: number;
@@ -25,6 +27,7 @@ const Canvas = ({
   isDrawing: boolean;
   currentTool: IconTool;
   currentColor: string;
+  canvasPosition: Position;
   setCurrentShape: Dispatch<SetStateAction<boolean>>;
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -45,7 +48,6 @@ const Canvas = ({
     referenceLeft: 0,
     referenceWidth: 0,
     referenceHeight: 0,
-    isRendered: false,
     rotation: 0,
   });
 
@@ -78,6 +80,10 @@ const Canvas = ({
     { id: 7, class: "btn7" },
     { id: 8, class: "btn8" },
   ];
+
+  const [isOnShapeContainer, setIsOnShapeContainer] = useState<boolean>(false);
+
+  const [XY, setXY] = useState<Point>({ x: 0, y: 0 });
 
   useEffect(() => {
     if (canvasRef.current) {
@@ -133,6 +139,8 @@ const Canvas = ({
         default:
           break;
       }
+
+      // moveShapeContainer(positionMove.x, positionMove.y);
     }
   }, [positionMove]);
 
@@ -348,7 +356,6 @@ const Canvas = ({
       referenceHeight: 0,
       background: "",
       componentClass: "",
-      isRendered: false,
       rotation: 0,
     });
   };
@@ -437,22 +444,60 @@ const Canvas = ({
     setIsInside(true);
   };
 
+  //SHAPE CONTAINER
   const handleShapeContainerMouseLeave = () => {
-    console.log("outside");
+    //console.log("outside");
     setCurrentShape(true);
   };
 
   const handleShapeContainerMouseEnter = () => {
-    console.log("inside");
+    // console.log("inside");
     setCurrentShape(false);
   };
 
-  const handleClick = () => {
-    console.log("on shape container");
+  const handleShapeContainerMouseDown = (
+    event: React.MouseEvent<HTMLDivElement>
+  ) => {
+    setIsOnShapeContainer(true);
+    setXY({
+      x: event.clientX - shapeContainer.left - canvasPosition.left,
+      y: event.clientY - shapeContainer.top - canvasPosition.top,
+    });
   };
+
+  //
+
+  //MAIN CONTAINER
+  const handleMainContainerMouseDown = (
+    event: React.MouseEvent<HTMLDivElement>
+  ) => {};
+
+  const handleMainContainerMouseMove = (
+    event: React.MouseEvent<HTMLDivElement>
+  ) => {
+    if (isOnShapeContainer === true) {
+      console.log();
+      moveShapeContainer(event.clientX - canvasPosition.left, event.clientY);
+    }
+  };
+
+  const handleMainContainerMouseUp = () => {
+    setIsOnShapeContainer(false);
+  };
+  //
 
   const handleButtonClick = (buttonId: number) => {
     console.log(buttonId);
+  };
+
+  const moveShapeContainer = (x: number, y: number) => {
+    setShapeContainer((s) => ({
+      ...s,
+      top: y - XY.y,
+      left: x - XY.x,
+      referenceTop: y - XY.y,
+      referenceLeft: x - XY.x,
+    }));
   };
 
   return (
@@ -462,53 +507,64 @@ const Canvas = ({
       onMouseEnter={handleMouseEnter}
     >
       <div
-        className="canvas-button-container"
         style={{
-          left: shapeContainer.left,
-          top: shapeContainer.top,
-          width: shapeContainer.width,
-          height: shapeContainer.height,
-          outline: isDrawing ? "" : "1.4px dashed gray",
+          width: "100%",
+          height: "100%",
           position: "absolute",
-          cursor: "move",
           zIndex: isDrawing ? 2 : 4,
         }}
-        onMouseLeave={handleShapeContainerMouseLeave}
-        onMouseEnter={handleShapeContainerMouseEnter}
-        onClick={handleClick}
+        onMouseDown={handleMainContainerMouseDown}
+        onMouseMove={handleMainContainerMouseMove}
+        onMouseUp={handleMainContainerMouseUp}
       >
         <div
           className="canvas-button-container"
           style={{
-            position: "relative",
-            width: "100%",
-            height: "100%",
+            left: shapeContainer.left,
+            top: shapeContainer.top,
+            width: shapeContainer.width,
+            height: shapeContainer.height,
+            outline: isDrawing ? "" : "1.4px dashed gray",
+            position: "absolute",
+            cursor: "move",
           }}
+          onMouseLeave={handleShapeContainerMouseLeave}
+          onMouseEnter={handleShapeContainerMouseEnter}
+          onMouseDown={handleShapeContainerMouseDown}
         >
-          <canvas
-            ref={dynamicCanvasRef}
-            style={{
-              width: "100%",
-              height: "100%",
-              position: "absolute",
-              inset: 0,
-            }}
-          ></canvas>
           <div
-            className="btn-container"
+            className="canvas-button-container"
             style={{
-              position: "absolute",
+              position: "relative",
               width: "100%",
               height: "100%",
             }}
           >
-            {buttons.map((button) => (
-              <button
-                key={button.id}
-                className={button.class}
-                onClick={() => handleButtonClick(button.id)}
-              ></button>
-            ))}
+            <canvas
+              ref={dynamicCanvasRef}
+              style={{
+                width: "100%",
+                height: "100%",
+                position: "absolute",
+                inset: 0,
+              }}
+            ></canvas>
+            <div
+              className="btn-container"
+              style={{
+                position: "absolute",
+                width: "100%",
+                height: "100%",
+              }}
+            >
+              {buttons.map((button) => (
+                <button
+                  key={button.id}
+                  className={button.class}
+                  onClick={() => handleButtonClick(button.id)}
+                ></button>
+              ))}
+            </div>
           </div>
         </div>
       </div>

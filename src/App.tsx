@@ -2,34 +2,40 @@
 import React, { useEffect, useRef, useState } from "react";
 
 //React JSX Elements
-import Canvas from "./components/canvas.tsx";
 import Tool from "./components/tool.tsx";
+import Canvas from "./components/canvas.tsx";
 import ColorPalette from "./components/colorPalette.tsx";
 
 //Interfaces
-import { Dimension } from "./interfaces/dimension.ts";
 import { Point } from "./interfaces/point.ts";
 import { IconTool } from "./interfaces/IconTool.ts";
+import { Dimension } from "./interfaces/dimension.ts";
 
 //Images
+import oval from "./assets/oval.svg";
+import star from "./assets/star.svg";
 import pencil from "./assets/pencil.svg";
 import eraser from "./assets/eraser.svg";
-import oval from "./assets/oval.svg";
-import rectangle from "./assets/rectangle.svg";
-import star from "./assets/star.svg";
 import rhombus from "./assets/rhombus.svg";
-import pentagon from "./assets/pentagon.svg";
 import hexagon from "./assets/hexagon.svg";
 import triangle from "./assets/triangle.svg";
+import pentagon from "./assets/pentagon.svg";
+import rectangle from "./assets/rectangle.svg";
 
 //Styles
 import "./App.css";
+import { Position } from "./interfaces/position.ts";
 
 const App = () => {
   const canvasContainer = useRef<HTMLDivElement>(null);
-  const [isDrawing, setIsDrawing] = useState(false);
-  const [currentColor, setCurrentColor] = useState("");
+  const [isDrawing, setIsDrawing] = useState<boolean>(false);
+  const [currentColor, setCurrentColor] = useState<string>("");
   const [currentShape, setCurrentShape] = useState<boolean>(true);
+  const canvasPosition: Position = {
+    left: canvasContainer.current?.getBoundingClientRect().left!,
+    top: canvasContainer.current?.getBoundingClientRect().top!,
+  };
+
   const [parentDimension, setParentDimension] = useState<Dimension>({
     width: 0,
     height: 0,
@@ -205,6 +211,7 @@ const App = () => {
             positionDown={mouseDownPosition}
             positionMove={mouseMovePosition}
             setCurrentShape={setCurrentShape}
+            canvasPosition={canvasPosition}
           ></Canvas>
         </div>
 
