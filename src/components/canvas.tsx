@@ -1,68 +1,40 @@
-import {
-  forwardRef,
-  useEffect,
-  useImperativeHandle,
-  useRef,
-  useState,
-} from "react";
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
+
+//interfaces
 import { Point } from "../interfaces/point";
 import { IconTool } from "../interfaces/IconTool";
 import { ShapeContainer } from "../interfaces/shapeContainer";
+
+//styles
 import "../styles/canvas.css";
-
-const DynamicComponent = forwardRef((shapeContainer: ShapeContainer, ref) => {
-  const auxCanvasRef = useRef<HTMLCanvasElement>(null);
-  const [ctxAux, setContext] = useState<CanvasRenderingContext2D>();
-  const ctxAuxCanvas = auxCanvasRef.current?.getContext("2d");
-
-  useImperativeHandle(ref, () => ({
-    getContext: () => ctxAux,
-  }));
-
-  useEffect(() => {
-    if (ctxAuxCanvas) {
-      setContext(ctxAuxCanvas);
-    }
-  }, [ctxAuxCanvas]);
-
-  return (
-    <canvas
-      ref={auxCanvasRef}
-      style={{
-        position: "absolute",
-        left: shapeContainer.left,
-        top: shapeContainer.top,
-        width: shapeContainer.width,
-        height: shapeContainer.height,
-      }}
-    ></canvas>
-  );
-});
 
 const Canvas = ({
   width,
   height,
   positionDown,
   positionMove,
+  isDrawing,
   currentTool,
   currentColor,
+  setCurrentShape,
 }: {
   width: number;
   height: number;
   positionDown: Point;
   positionMove: Point;
+  isDrawing: boolean;
   currentTool: IconTool;
   currentColor: string;
+  setCurrentShape: Dispatch<SetStateAction<boolean>>;
 }) => {
-  const canvasRef: React.Ref<HTMLCanvasElement> = useRef(null);
-  const dynamicCanvasRef: React.Ref<HTMLCanvasElement> = useRef(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const dynamicCanvasRef = useRef<HTMLCanvasElement>(null);
   const ctxAux = dynamicCanvasRef.current?.getContext("2d");
 
   const [ctx, setContext] = useState<CanvasRenderingContext2D>();
   const [isInside, setIsInside] = useState(false);
-  const [isComponentVisible, setComponentVisible] = useState(true);
 
-  const [shapeContainer, setShapeContainer] = useState({
+  const [shapeContainer, setShapeContainer] = useState<ShapeContainer>({
     top: 0,
     left: 0,
     width: 0,
@@ -96,8 +68,18 @@ const Canvas = ({
     },
   ];
 
+  const buttons = [
+    { id: 1, class: "btn1" },
+    { id: 2, class: "btn2" },
+    { id: 3, class: "btn3" },
+    { id: 4, class: "btn4" },
+    { id: 5, class: "btn5" },
+    { id: 6, class: "btn6" },
+    { id: 7, class: "btn7" },
+    { id: 8, class: "btn8" },
+  ];
+
   useEffect(() => {
-    //main canvas
     if (canvasRef.current) {
       const ctx = canvasRef.current.getContext("2d");
       if (ctx) {
@@ -107,49 +89,52 @@ const Canvas = ({
   }, []);
 
   useEffect(() => {
-    // if (isInside) {
-    switch (currentTool.toolGroupID) {
-      case 1:
-      case 2:
-        drawShapeContainer();
-        break;
-      case 3:
-        drawLine();
-        break;
+    if (isInside) {
+      if (ctx) {
+        ctx.strokeStyle = currentColor;
+        ctx.fillStyle = currentColor;
+        shapeContainer.background = currentColor;
+      }
 
-      case 4:
-        erase();
-        break;
-      default:
-        break;
-    }
-    // }
-  }, [positionMove]);
+      if (currentTool.toolGroupID === 2) {
+        setShapeContainer((s) => ({ ...s, background: "transparent" }));
+      } else {
+        //setShapeContainer((s) => ({ ...s, background: currentColor })); // set Color from input
+      }
 
-  useEffect(() => {
-    if (ctx) {
-      ctx.strokeStyle = currentColor;
-      ctx.fillStyle = currentColor;
-      shapeContainer.background = currentColor;
-    }
+      setPath(currentTool.toolId);
 
-    if (currentTool.toolGroupID === 2) {
-      setShapeContainer((s) => ({ ...s, background: "transparent" }));
-    } else {
-      //setShapeContainer((s) => ({ ...s, background: currentColor })); // set Color from input
-    }
-
-    setPath(currentTool.toolId);
-
-    switch (currentTool.toolGroupID) {
-      case 1:
-        paintShape();
-        resetShapeContainerProps();
-        break;
-      default:
-        break;
+      switch (currentTool.toolGroupID) {
+        case 1:
+          paintShape();
+          resetShapeContainerProps();
+          break;
+        default:
+          break;
+      }
     }
   }, [positionDown]);
+
+  useEffect(() => {
+    //mouse move
+    if (isInside) {
+      switch (currentTool.toolGroupID) {
+        case 1:
+        case 2:
+          drawShapeContainer();
+          break;
+        case 3:
+          drawLine();
+          break;
+
+        case 4:
+          erase();
+          break;
+        default:
+          break;
+      }
+    }
+  }, [positionMove]);
 
   const paintShape = () => {
     switch (shapeContainer.componentClass) {
@@ -452,31 +437,87 @@ const Canvas = ({
     setIsInside(true);
   };
 
+  const handleShapeContainerMouseLeave = () => {
+    console.log("outside");
+    setCurrentShape(true);
+  };
+
+  const handleShapeContainerMouseEnter = () => {
+    console.log("inside");
+    setCurrentShape(false);
+  };
+
+  const handleClick = () => {
+    console.log("on shape container");
+  };
+
+  const handleButtonClick = (buttonId: number) => {
+    console.log(buttonId);
+  };
+
   return (
-    <div className="canvas-container">
-      <DynamicComponent
-        top={shapeContainer.top}
-        left={shapeContainer.left}
-        width={shapeContainer.width}
-        height={shapeContainer.height}
-        referenceTop={shapeContainer.referenceTop}
-        referenceLeft={shapeContainer.referenceLeft}
-        referenceWidth={shapeContainer.referenceWidth}
-        referenceHeight={shapeContainer.referenceHeight}
-        background={shapeContainer.background}
-        componentClass={shapeContainer.componentClass}
-        isRendered={false}
-        rotation={0}
-        ref={dynamicCanvasRef}
-      ></DynamicComponent>
+    <div
+      className="canvas-container"
+      onMouseLeave={handelMouseLeave}
+      onMouseEnter={handleMouseEnter}
+    >
+      <div
+        className="canvas-button-container"
+        style={{
+          left: shapeContainer.left,
+          top: shapeContainer.top,
+          width: shapeContainer.width,
+          height: shapeContainer.height,
+          outline: isDrawing ? "" : "1.4px dashed gray",
+          position: "absolute",
+          cursor: "move",
+          zIndex: isDrawing ? 2 : 4,
+        }}
+        onMouseLeave={handleShapeContainerMouseLeave}
+        onMouseEnter={handleShapeContainerMouseEnter}
+        onClick={handleClick}
+      >
+        <div
+          className="canvas-button-container"
+          style={{
+            position: "relative",
+            width: "100%",
+            height: "100%",
+          }}
+        >
+          <canvas
+            ref={dynamicCanvasRef}
+            style={{
+              width: "100%",
+              height: "100%",
+              position: "absolute",
+              inset: 0,
+            }}
+          ></canvas>
+          <div
+            className="btn-container"
+            style={{
+              position: "absolute",
+              width: "100%",
+              height: "100%",
+            }}
+          >
+            {buttons.map((button) => (
+              <button
+                key={button.id}
+                className={button.class}
+                onClick={() => handleButtonClick(button.id)}
+              ></button>
+            ))}
+          </div>
+        </div>
+      </div>
 
       <canvas
-        className="canvas"
-        onMouseLeave={handelMouseLeave}
-        onMouseEnter={handleMouseEnter}
         ref={canvasRef}
-        width={width}
         height={height}
+        width={width}
+        className="canvas"
       ></canvas>
 
       <div

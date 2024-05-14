@@ -1,9 +1,10 @@
 //React
 import React, { useEffect, useRef, useState } from "react";
 
-//components
+//React JSX Elements
 import Canvas from "./components/canvas.tsx";
 import Tool from "./components/tool.tsx";
+import ColorPalette from "./components/colorPalette.tsx";
 
 //Interfaces
 import { Dimension } from "./interfaces/dimension.ts";
@@ -23,11 +24,12 @@ import triangle from "./assets/triangle.svg";
 
 //Styles
 import "./App.css";
-import ColorPalette from "./components/colorPalette.tsx";
 
 const App = () => {
   const canvasContainer = useRef<HTMLDivElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
+  const [currentColor, setCurrentColor] = useState("");
+  const [currentShape, setCurrentShape] = useState<boolean>(true);
   const [parentDimension, setParentDimension] = useState<Dimension>({
     width: 0,
     height: 0,
@@ -50,8 +52,6 @@ const App = () => {
     icon: pencil,
   });
 
-  const [currentColor, setCurrentColor] = useState("");
-
   useEffect(() => {
     if (canvasContainer.current) {
       setParentDimension({
@@ -70,14 +70,14 @@ const App = () => {
     };
   }, []);
 
-  //handle events
   const handleMouseDown = (event: React.MouseEvent<HTMLDivElement>): void => {
-    setIsDrawing(true);
-
     if (canvasContainer.current) {
       const x = event.nativeEvent.offsetX;
       const y = event.nativeEvent.offsetY;
-      setMouseDownPosition({ x: x, y: y });
+      if (currentShape == true) {
+        setIsDrawing(true);
+        setMouseDownPosition({ x: x, y: y });
+      }
     }
   };
 
@@ -86,16 +86,19 @@ const App = () => {
     if (canvasContainer.current) {
       const x = event.nativeEvent.offsetX;
       const y = event.nativeEvent.offsetY;
-      setMouseMovePosition({ x: x, y: y });
+      if (currentShape == true) {
+        setMouseMovePosition({ x: x, y: y });
+      }
     }
   };
 
   const handleMouseUp = () => {
-    setIsDrawing(false);
+    if (currentShape == true) {
+      setIsDrawing(false);
+    }
   };
 
   //list items
-
   const toolsItems: IconTool[] = [
     {
       toolGroupID: 3,
@@ -123,7 +126,6 @@ const App = () => {
     },
   ];
 
-  //
   const shapeItems: IconTool[] = [
     {
       toolGroupID: 1,
@@ -183,7 +185,6 @@ const App = () => {
           toolItems={toolsItems}
           setCurrentTool={setCurrentTool}
         />
-
         <ColorPalette setCurrentColor={setCurrentColor} />
       </div>
 
@@ -196,12 +197,14 @@ const App = () => {
           onMouseUp={handleMouseUp}
         >
           <Canvas
+            isDrawing={isDrawing}
+            currentTool={currentTool}
+            currentColor={currentColor}
             width={parentDimension.width}
             height={parentDimension.height}
             positionDown={mouseDownPosition}
             positionMove={mouseMovePosition}
-            currentTool={currentTool}
-            currentColor={currentColor}
+            setCurrentShape={setCurrentShape}
           ></Canvas>
         </div>
 
