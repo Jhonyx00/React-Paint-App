@@ -728,10 +728,8 @@ const Canvas = ({
       onMouseEnter={handleMouseEnter}
     >
       <div
+        className="main-container"
         style={{
-          width: "100%",
-          height: "100%",
-          position: "absolute",
           zIndex: isDrawing ? 2 : 4,
         }}
         onMouseDown={handleMainContainerMouseDown}
@@ -739,45 +737,21 @@ const Canvas = ({
         onMouseUp={handleMainContainerMouseUp}
       >
         <div
-          className="canvas-button-container"
+          className="shape-container"
           style={{
             left: shapeContainer.left,
             top: shapeContainer.top,
             width: shapeContainer.width,
             height: shapeContainer.height,
             outline: isDrawing ? "" : "1.4px dashed gray",
-            position: "absolute",
-            cursor: "move",
           }}
           onMouseLeave={handleShapeContainerMouseLeave}
           onMouseEnter={handleShapeContainerMouseEnter}
           onMouseDown={handleShapeContainerMouseDown}
         >
-          <div
-            className="canvas-button-container"
-            style={{
-              position: "relative",
-              width: "100%",
-              height: "100%",
-            }}
-          >
-            <canvas
-              ref={dynamicCanvasRef}
-              style={{
-                width: "100%",
-                height: "100%",
-                position: "absolute",
-                inset: 0,
-              }}
-            ></canvas>
-            <div
-              className="btn-container"
-              style={{
-                position: "absolute",
-                width: "100%",
-                height: "100%",
-              }}
-            >
+          <div className="aux-canvas-button-container">
+            <canvas className="aux-canvas" ref={dynamicCanvasRef}></canvas>
+            <div className="btn-container">
               {buttons.map((button) => (
                 <button
                   key={button.id}
