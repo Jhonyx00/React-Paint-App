@@ -25,6 +25,7 @@ import rectangle from "./assets/rectangle.svg";
 //Styles
 import "./App.css";
 import { Position } from "./interfaces/position.ts";
+import StatusBar from "./components/statusbar.tsx";
 
 const App = () => {
   const canvasContainer = useRef<HTMLDivElement>(null);
@@ -215,10 +216,13 @@ const App = () => {
           ></Canvas>
         </div>
 
-        <div className="status-bar-container">
-          {parentDimension.width} × {parentDimension.height}pixels,
-          {currentTool.name}
-        </div>
+        <StatusBar
+          parentDimension={{
+            width: parentDimension.width,
+            height: parentDimension.height,
+          }}
+          toolName={currentTool.name}
+        />
       </div>
     </div>
   );

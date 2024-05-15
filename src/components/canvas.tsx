@@ -731,6 +731,8 @@ const Canvas = ({
         className="main-container"
         style={{
           zIndex: isDrawing ? 2 : 4,
+          width: width,
+          height: height,
         }}
         onMouseDown={handleMainContainerMouseDown}
         onMouseMove={handleMainContainerMouseMove}
