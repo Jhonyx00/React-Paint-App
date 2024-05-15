@@ -83,7 +83,16 @@ const Canvas = ({
 
   const [isOnShapeContainer, setIsOnShapeContainer] = useState<boolean>(false);
 
+  const [isOnResizeButton, setIsOnResizeButton] = useState<boolean>(false);
+
   const [XY, setXY] = useState<Point>({ x: 0, y: 0 });
+
+  const [buttonId, setButtonId] = useState<number>(0);
+
+  const [mainContainerMouseDown, setMainContainerMouseDown] = useState<Point>({
+    x: 0,
+    y: 0,
+  });
 
   useEffect(() => {
     if (canvasRef.current) {
@@ -370,7 +379,6 @@ const Canvas = ({
     }
   };
 
-  //
   //SHAPES
   const drawShapeContainer = () => {
     let rectangleWidth = positionMove.x - positionDown.x;
@@ -378,14 +386,14 @@ const Canvas = ({
     let newWidth = Math.abs(rectangleWidth);
     let newHeight = Math.abs(rectangleHeight);
 
-    setShapeContainer((s) => ({
-      ...s,
+    setShapeContainer({
+      ...shapeContainer,
       width: newWidth,
       height: newHeight,
       referenceWidth: newWidth,
       referenceHeight: newHeight,
       componentClass: currentTool.name,
-    }));
+    });
 
     // Quadrant 1
     if (rectangleWidth > 0 && rectangleHeight < 0) {
@@ -446,12 +454,10 @@ const Canvas = ({
 
   //SHAPE CONTAINER
   const handleShapeContainerMouseLeave = () => {
-    //console.log("outside");
     setCurrentShape(true);
   };
 
   const handleShapeContainerMouseEnter = () => {
-    // console.log("inside");
     setCurrentShape(false);
   };
 
@@ -465,29 +471,234 @@ const Canvas = ({
     });
   };
 
-  //
-
   //MAIN CONTAINER
   const handleMainContainerMouseDown = (
     event: React.MouseEvent<HTMLDivElement>
-  ) => {};
+  ) => {
+    setMainContainerMouseDown({ x: event.clientX, y: event.clientY });
+  };
 
   const handleMainContainerMouseMove = (
     event: React.MouseEvent<HTMLDivElement>
   ) => {
-    if (isOnShapeContainer === true) {
-      console.log();
-      moveShapeContainer(event.clientX - canvasPosition.left, event.clientY);
+    const x = event.clientX;
+    const y = event.clientY;
+    if (isOnResizeButton == true) {
+      setResizeValues(x, y);
+    } else if (isOnShapeContainer === true) {
+      // substract left value of canvas container (toolbar and possibly a menu on top)
+      moveShapeContainer(x - canvasPosition.left, y - canvasPosition.top);
     }
   };
 
   const handleMainContainerMouseUp = () => {
     setIsOnShapeContainer(false);
+    setIsOnResizeButton(false);
+    resetShapeContainerReferenceProps();
   };
-  //
 
-  const handleButtonClick = (buttonId: number) => {
-    console.log(buttonId);
+  const setResizeValues = (x: number, y: number) => {
+    //calculate value from mousedown to offset
+    const dX = x - mainContainerMouseDown.x;
+    const dY = y - mainContainerMouseDown.y;
+    //calculate new top, left, width and height from original width and height
+    const newTop = shapeContainer.referenceTop + dY;
+    const newLeft = shapeContainer.referenceLeft + dX;
+    const newWidth = shapeContainer.referenceWidth - dX;
+    const newHeight = shapeContainer.referenceHeight - dY;
+    const newInverseWidth = shapeContainer.referenceWidth + dX;
+    const newInverseHeight = shapeContainer.referenceHeight + dY;
+    //set new values to shapeContainer if the new values are greather than zero
+
+    switch (buttonId) {
+      case 1:
+        nwResize(newLeft, newTop, newWidth, newHeight);
+        break;
+
+      case 2:
+        wResize(newLeft, newWidth);
+        break;
+
+      case 3:
+        swResize(newLeft, newWidth, newInverseHeight);
+        break;
+
+      case 4:
+        sResize(newInverseHeight);
+        break;
+
+      case 5:
+        seResize(newInverseWidth, newInverseHeight);
+        break;
+
+      case 6:
+        eResize(newInverseWidth);
+        break;
+
+      case 7:
+        neResize(newTop, newHeight, newInverseWidth);
+        break;
+
+      case 8:
+        nResize(newTop, newHeight);
+        break;
+
+      default:
+        break;
+    }
+  };
+
+  //RESIZE FUNCTIONS
+
+  //1
+  const nwResize = (
+    newLeft: number,
+    newTop: number,
+    newWidth: number,
+    newHeight: number
+  ) => {
+    if (newWidth > 0 && newHeight > 0) {
+      setShapeContainer((s) => ({
+        ...s,
+        left: newLeft,
+        top: newTop,
+        width: newWidth,
+        height: newHeight,
+      }));
+    } else if (newWidth < 0 && newHeight > 0) {
+      setShapeContainer((s) => ({
+        ...s,
+        top: newTop,
+        height: newHeight,
+      }));
+    } else if (newHeight < 0 && newWidth > 0) {
+      setShapeContainer((s) => ({
+        ...s,
+        left: newLeft,
+        width: newWidth,
+      }));
+    }
+  };
+  //2
+  const wResize = (newLeft: number, newWidth: number) => {
+    if (newWidth > 0) {
+      setShapeContainer((s) => ({
+        ...s,
+        left: newLeft,
+        width: newWidth,
+      }));
+    }
+  };
+  //3
+  const swResize = (
+    newLeft: number,
+    newWidth: number,
+    newInverseHeight: number
+  ) => {
+    if (newWidth > 0 && newInverseHeight > 0) {
+      setShapeContainer((s) => ({
+        ...s,
+        left: newLeft,
+        width: newWidth,
+        height: newInverseHeight,
+      }));
+    } else if (newWidth < 0 && newInverseHeight > 0) {
+      setShapeContainer((s) => ({
+        ...s,
+        height: newInverseHeight,
+      }));
+    } else if (newInverseHeight < 0 && newWidth > 0) {
+      setShapeContainer((s) => ({
+        ...s,
+        left: newLeft,
+        width: newWidth,
+      }));
+    }
+  };
+  //4
+  const sResize = (newInverseHeight: number) => {
+    if (newInverseHeight > 0) {
+      setShapeContainer((s) => ({
+        ...s,
+        height: newInverseHeight,
+      }));
+    }
+  };
+  //5
+  const seResize = (newInverseWidth: number, newInverseHeight: number) => {
+    if (newInverseWidth > 0 && newInverseHeight > 0) {
+      setShapeContainer((s) => ({
+        ...s,
+        width: newInverseWidth,
+        height: newInverseHeight,
+      }));
+    } else if (newInverseWidth < 0 && newInverseHeight > 0) {
+      setShapeContainer((s) => ({
+        ...s,
+        height: newInverseHeight,
+      }));
+    } else if (newInverseWidth > 0 && newInverseHeight < 0) {
+      setShapeContainer((s) => ({
+        ...s,
+        width: newInverseWidth,
+      }));
+    }
+  };
+  //6
+  const eResize = (newInverseWidth: number) => {
+    if (newInverseWidth > 0) {
+      //
+      shapeContainer.width = newInverseWidth;
+      setShapeContainer((s) => ({
+        ...s,
+        width: newInverseWidth,
+      }));
+    }
+  };
+  //7
+  const neResize = (
+    newTop: number,
+    newHeight: number,
+    newInverseWidth: number
+  ) => {
+    if (newHeight > 0 && newInverseWidth > 0) {
+      setShapeContainer((s) => ({
+        ...s,
+        top: newTop,
+        width: newInverseWidth,
+        height: newHeight,
+      }));
+    } else if (newHeight > 0 && newInverseWidth < 0) {
+      setShapeContainer((s) => ({
+        ...s,
+        top: newTop,
+        height: newHeight,
+      }));
+    } else if (newHeight < 0 && newInverseWidth > 0) {
+      setShapeContainer((s) => ({
+        ...s,
+        width: newInverseWidth,
+      }));
+    }
+  };
+  //8
+  const nResize = (newTop: number, newHeight: number) => {
+    if (newHeight > 0) {
+      setShapeContainer((s) => ({
+        ...s,
+        top: newTop,
+        height: newHeight,
+      }));
+    }
+  };
+
+  const handleButtonMouseDown = (buttonId: number) => {
+    setButtonId(buttonId);
+    setIsOnResizeButton(true);
+  };
+
+  const handleButtonMouseUp = () => {
+    resetShapeContainerReferenceProps();
   };
 
   const moveShapeContainer = (x: number, y: number) => {
@@ -497,6 +708,16 @@ const Canvas = ({
       left: x - XY.x,
       referenceTop: y - XY.y,
       referenceLeft: x - XY.x,
+    }));
+  };
+
+  const resetShapeContainerReferenceProps = () => {
+    setShapeContainer((s) => ({
+      ...s,
+      referenceLeft: s.left,
+      referenceTop: s.top,
+      referenceWidth: s.width,
+      referenceHeight: s.height,
     }));
   };
 
@@ -561,7 +782,8 @@ const Canvas = ({
                 <button
                   key={button.id}
                   className={button.class}
-                  onClick={() => handleButtonClick(button.id)}
+                  onMouseDown={() => handleButtonMouseDown(button.id)}
+                  onMouseUp={handleButtonMouseUp}
                 ></button>
               ))}
             </div>
