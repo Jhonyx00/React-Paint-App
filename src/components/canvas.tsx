@@ -24,9 +24,9 @@ const Canvas = ({
 }) => {
   //refs
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const dynamicCanvasRef = useRef<HTMLCanvasElement>(null);
+  const auxCanvas = useRef<HTMLCanvasElement>(null);
   const shapeContainerRef = useRef<HTMLDivElement>(null);
-  const ctxAux = dynamicCanvasRef.current?.getContext("2d");
+  const ctxAux = auxCanvas.current?.getContext("2d");
 
   //useState
   const [ctx, setContext] = useState<CanvasRenderingContext2D>();
@@ -45,12 +45,14 @@ const Canvas = ({
     rotation: 0,
   });
 
+  const [isImageData, setIsImageData] = useState<boolean>(false);
   const [isOnShapeContainer, setIsOnShapeContainer] = useState<boolean>(false);
   const [isOnResizeButton, setIsOnResizeButton] = useState<boolean>(false);
   const [XY, setXY] = useState<Point>({ x: 0, y: 0 });
   const [buttonId, setButtonId] = useState<number>(0);
   const [isOutside, setIsOutside] = useState<boolean>(true);
   const [isDrawing, setIsDrawing] = useState<boolean>(false);
+  const [imageData, setImageData] = useState<ImageData | undefined>(undefined);
 
   const [resizePoint, setResizePoint] = useState<Point>({
     x: 0,
@@ -326,7 +328,6 @@ const Canvas = ({
 
   const setPath = (id: number) => {
     const path = new Path2D(shapes[id - 1].path);
-
     if (ctxAux) {
       ctxAux.fillStyle = shapeContainer.background;
       ctxAux.clearRect(0, 0, 300, 150);
@@ -391,7 +392,6 @@ const Canvas = ({
       }));
     }
   };
-  //
 
   const erase = () => {
     if (ctx) {
@@ -402,8 +402,9 @@ const Canvas = ({
   const handelMouseLeave = () => {
     setIsInside(false);
 
-    // paintShape();
-    //resetShapeContainerProps();
+    paintShape();
+
+    resetShapeContainerProps();
   };
 
   const handleMouseEnter = () => {
@@ -436,7 +437,7 @@ const Canvas = ({
     event: React.MouseEvent<HTMLDivElement>
   ) => {
     setIsDrawing(true);
-
+    // resetShapeContainerReferenceProps();
     const point: Point = {
       x: event.clientX,
       y: event.clientY,
@@ -444,9 +445,17 @@ const Canvas = ({
 
     if (!isInside) return; //inside canvas area
 
+    //inside shape container
     setResizePoint({ x: point.x, y: point.y });
+    //if "Selected is selected, cursor is inside shape container and there is no image yet"
+    if (currentTool.toolGroupID === 2 && !isImageData) {
+      setSelection();
+    }
 
     if (!isOutside) return;
+    auxCanvas.current!.style.backgroundColor = "transparent";
+
+    //outside shape container
     setMouseDownPosition({
       x: point.x - canvasPosition.left,
       y: point.y - canvasPosition.top,
@@ -458,21 +467,56 @@ const Canvas = ({
       shapeContainer.background = currentColor;
     }
 
-    if (currentTool.toolGroupID === 2) {
-      setShapeContainer((s) => ({ ...s, background: "transparent" }));
-    }
-
     if (currentTool.toolGroupID === 1) {
-      switch (currentTool.toolGroupID) {
-        case 1:
-          paintShape();
-          setPath(currentTool.toolId);
-          break;
-        //more cases
-        default:
-          break;
-      }
+      paintShape();
+      resetAuxCanvasDimension();
+      setPath(currentTool.toolId);
     }
+    // "Select is selected"
+    if (currentTool.toolGroupID === 2) {
+      resetSelection();
+      ctxAux?.clearRect(0, 0, 300, 150); ////////
+    }
+  };
+
+  const resetAuxCanvasDimension = () => {
+    if (auxCanvas.current) {
+      auxCanvas.current.width = 300;
+      auxCanvas.current.height = 150;
+    }
+  };
+
+  const resetSelection = () => {
+    const { left, top, width, height } = shapeContainer;
+    ctxAux?.clearRect(0, 0, width, height);
+    setIsImageData(false);
+    setImageData(undefined);
+
+    if (!auxCanvas.current) return;
+    auxCanvas.current.style.backgroundColor = "transparent";
+
+    if (!ctx || !imageData) return;
+    ctx?.putImageData(imageData, left, top);
+  };
+
+  const setSelection = () => {
+    const { left, top, width, height } = shapeContainer;
+
+    if (!(width > 0 && height > 0)) return;
+    const image = ctx?.getImageData(left, top, width, height);
+
+    if (!image) return;
+    ctx?.clearRect(left, top, width, height);
+
+    if (!auxCanvas.current) return;
+
+    auxCanvas.current.width = image.width;
+    auxCanvas.current.height = image.height;
+    ctxAux?.putImageData(image, 0, 0);
+    auxCanvas.current.style.backgroundColor = "white";
+
+    setIsImageData(true);
+    setImageData(image);
   };
 
   const handleMainContainerMouseMove = (
@@ -775,7 +819,7 @@ const Canvas = ({
           ref={shapeContainerRef}
         >
           <div className="aux-canvas-button-container">
-            <canvas className="aux-canvas" ref={dynamicCanvasRef}></canvas>
+            <canvas className="aux-canvas" ref={auxCanvas}></canvas>
             <div className="btn-container">
               {buttons.map((button) => (
                 <button

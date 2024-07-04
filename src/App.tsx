@@ -20,6 +20,8 @@ import hexagon from "./assets/hexagon.svg";
 import triangle from "./assets/triangle.svg";
 import pentagon from "./assets/pentagon.svg";
 import rectangle from "./assets/rectangle.svg";
+import select from "./assets/select.svg";
+import freeSelect from "./assets/free-form-select.svg";
 
 //Styles
 import "./App.css";
@@ -137,6 +139,21 @@ const App = () => {
     },
   ];
 
+  const selectItems: IconTool[] = [
+    {
+      toolGroupID: 2,
+      toolId: 1,
+      name: "Select",
+      icon: select,
+    },
+    {
+      toolGroupID: 10,
+      toolId: 2,
+      name: "FreeSelect",
+      icon: freeSelect,
+    },
+  ];
+
   return (
     <div className="toolbar-canvas-container">
       <div className="toolbar-container">
@@ -148,6 +165,11 @@ const App = () => {
         <Tool
           toolGroupName={"Tools"}
           toolItems={toolsItems}
+          setCurrentTool={setCurrentTool}
+        />
+        <Tool
+          toolGroupName={"Select"}
+          toolItems={selectItems}
           setCurrentTool={setCurrentTool}
         />
         <ColorPalette setCurrentColor={setCurrentColor} />
