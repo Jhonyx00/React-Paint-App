@@ -19,6 +19,7 @@
     .canvas-main-container {
       overflow: auto;
       scrollbar-width: thin;
+      cursor: crosshair;
     }
 
     .status-bar-container {

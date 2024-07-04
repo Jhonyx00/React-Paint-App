@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 //interfaces
 import { Point } from "../interfaces/point";
@@ -12,31 +12,25 @@ import { Position } from "../interfaces/position";
 const Canvas = ({
   width,
   height,
-  positionDown,
-  positionMove,
-  isDrawing,
   currentTool,
   currentColor,
   canvasPosition,
-  setCurrentShape,
 }: {
   width: number;
   height: number;
-  positionDown: Point;
-  positionMove: Point;
-  isDrawing: boolean;
   currentTool: IconTool;
   currentColor: string;
   canvasPosition: Position;
-  setCurrentShape: Dispatch<SetStateAction<boolean>>;
 }) => {
+  //refs
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const dynamicCanvasRef = useRef<HTMLCanvasElement>(null);
+  const shapeContainerRef = useRef<HTMLDivElement>(null);
   const ctxAux = dynamicCanvasRef.current?.getContext("2d");
 
+  //useState
   const [ctx, setContext] = useState<CanvasRenderingContext2D>();
   const [isInside, setIsInside] = useState(false);
-
   const [shapeContainer, setShapeContainer] = useState<ShapeContainer>({
     top: 0,
     left: 0,
@@ -51,6 +45,29 @@ const Canvas = ({
     rotation: 0,
   });
 
+  const [isOnShapeContainer, setIsOnShapeContainer] = useState<boolean>(false);
+  const [isOnResizeButton, setIsOnResizeButton] = useState<boolean>(false);
+  const [XY, setXY] = useState<Point>({ x: 0, y: 0 });
+  const [buttonId, setButtonId] = useState<number>(0);
+  const [isOutside, setIsOutside] = useState<boolean>(true);
+  const [isDrawing, setIsDrawing] = useState<boolean>(false);
+
+  const [resizePoint, setResizePoint] = useState<Point>({
+    x: 0,
+    y: 0,
+  });
+
+  const [positionDown, setMouseDownPosition] = useState<Point>({
+    x: 0,
+    y: 0,
+  });
+
+  const [positionMove, setMouseMovePosition] = useState<Point>({
+    x: 0,
+    y: 0,
+  });
+
+  //arrays
   const shapes = [
     { name: "Rectangle", path: "M0 0, L0 150, L300 150, L300 0 Z" },
     { name: "Ellipse", path: "M0 75 A150 75 0 1 0 300 75 A150 75 0 1 0 0 75" },
@@ -81,19 +98,6 @@ const Canvas = ({
     { id: 8, class: "btn8" },
   ];
 
-  const [isOnShapeContainer, setIsOnShapeContainer] = useState<boolean>(false);
-
-  const [isOnResizeButton, setIsOnResizeButton] = useState<boolean>(false);
-
-  const [XY, setXY] = useState<Point>({ x: 0, y: 0 });
-
-  const [buttonId, setButtonId] = useState<number>(0);
-
-  const [mainContainerMouseDown, setMainContainerMouseDown] = useState<Point>({
-    x: 0,
-    y: 0,
-  });
-
   useEffect(() => {
     if (canvasRef.current) {
       const ctx = canvasRef.current.getContext("2d");
@@ -102,56 +106,6 @@ const Canvas = ({
       }
     }
   }, []);
-
-  useEffect(() => {
-    if (isInside) {
-      if (ctx) {
-        ctx.strokeStyle = currentColor;
-        ctx.fillStyle = currentColor;
-        shapeContainer.background = currentColor;
-      }
-
-      if (currentTool.toolGroupID === 2) {
-        setShapeContainer((s) => ({ ...s, background: "transparent" }));
-      } else {
-        //setShapeContainer((s) => ({ ...s, background: currentColor })); // set Color from input
-      }
-
-      setPath(currentTool.toolId);
-
-      switch (currentTool.toolGroupID) {
-        case 1:
-          paintShape();
-          resetShapeContainerProps();
-          break;
-        default:
-          break;
-      }
-    }
-  }, [positionDown]);
-
-  useEffect(() => {
-    //mouse move
-    if (isInside) {
-      switch (currentTool.toolGroupID) {
-        case 1:
-        case 2:
-          drawShapeContainer();
-          break;
-        case 3:
-          drawLine();
-          break;
-
-        case 4:
-          erase();
-          break;
-        default:
-          break;
-      }
-
-      // moveShapeContainer(positionMove.x, positionMove.y);
-    }
-  }, [positionMove]);
 
   const paintShape = () => {
     switch (shapeContainer.componentClass) {
@@ -187,6 +141,7 @@ const Canvas = ({
         break;
     }
   };
+
   const drawLine = (): void => {
     if (ctx) {
       ctx.beginPath();
@@ -446,6 +401,9 @@ const Canvas = ({
 
   const handelMouseLeave = () => {
     setIsInside(false);
+
+    // paintShape();
+    //resetShapeContainerProps();
   };
 
   const handleMouseEnter = () => {
@@ -453,54 +411,120 @@ const Canvas = ({
   };
 
   //SHAPE CONTAINER
-  const handleShapeContainerMouseLeave = () => {
-    setCurrentShape(true);
-  };
-
-  const handleShapeContainerMouseEnter = () => {
-    setCurrentShape(false);
-  };
 
   const handleShapeContainerMouseDown = (
     event: React.MouseEvent<HTMLDivElement>
   ) => {
     setIsOnShapeContainer(true);
+
     setXY({
       x: event.clientX - shapeContainer.left - canvasPosition.left,
       y: event.clientY - shapeContainer.top - canvasPosition.top,
     });
   };
 
-  //MAIN CONTAINER
+  const handleShapeContainerMouseLeave = () => {
+    setIsOutside(true);
+  };
+
+  const handleShapeContainerMouseEnter = () => {
+    setIsOutside(false);
+  };
+
+  //MAIN CONTAINER //////////////////////////////////////////
   const handleMainContainerMouseDown = (
     event: React.MouseEvent<HTMLDivElement>
   ) => {
-    setMainContainerMouseDown({ x: event.clientX, y: event.clientY });
+    setIsDrawing(true);
+
+    const point: Point = {
+      x: event.clientX,
+      y: event.clientY,
+    };
+
+    if (!isInside) return; //inside canvas area
+
+    setResizePoint({ x: point.x, y: point.y });
+
+    if (!isOutside) return;
+    setMouseDownPosition({
+      x: point.x - canvasPosition.left,
+      y: point.y - canvasPosition.top,
+    });
+
+    if (ctx) {
+      ctx.strokeStyle = currentColor;
+      ctx.fillStyle = currentColor;
+      shapeContainer.background = currentColor;
+    }
+
+    if (currentTool.toolGroupID === 2) {
+      setShapeContainer((s) => ({ ...s, background: "transparent" }));
+    }
+
+    if (currentTool.toolGroupID === 1) {
+      switch (currentTool.toolGroupID) {
+        case 1:
+          paintShape();
+          setPath(currentTool.toolId);
+          break;
+        //more cases
+        default:
+          break;
+      }
+    }
   };
 
   const handleMainContainerMouseMove = (
     event: React.MouseEvent<HTMLDivElement>
   ) => {
-    const x = event.clientX;
-    const y = event.clientY;
-    if (isOnResizeButton == true) {
-      setResizeValues(x, y);
-    } else if (isOnShapeContainer === true) {
-      // substract left value of canvas container (toolbar and possibly a menu on top)
-      moveShapeContainer(x - canvasPosition.left, y - canvasPosition.top);
+    const point: Point = {
+      x: event.clientX,
+      y: event.clientY,
+    };
+
+    // substract left value of canvas container (toolbar and possibly a menu on top)
+    const precisePoint: Point = {
+      x: point.x - canvasPosition.left,
+      y: point.y - canvasPosition.top,
+    };
+
+    if (isOnResizeButton) {
+      setResizeValues(point);
+    } else if (isOnShapeContainer) {
+      moveShapeContainer(precisePoint);
+    } else {
+      setMouseMovePosition(precisePoint);
+      if (!isDrawing) return;
+      if (!isInside) return;
+      switch (currentTool.toolGroupID) {
+        case 1:
+        case 2:
+          drawShapeContainer();
+          break;
+        case 3:
+          drawLine();
+          break;
+        case 4:
+          erase();
+          break;
+        default:
+          break;
+      }
     }
   };
 
   const handleMainContainerMouseUp = () => {
+    setIsDrawing(false);
     setIsOnShapeContainer(false);
     setIsOnResizeButton(false);
     resetShapeContainerReferenceProps();
   };
 
-  const setResizeValues = (x: number, y: number) => {
+  const setResizeValues = (point: Point) => {
     //calculate value from mousedown to offset
-    const dX = x - mainContainerMouseDown.x;
-    const dY = y - mainContainerMouseDown.y;
+    const dX = point.x - resizePoint.x;
+    const dY = point.y - resizePoint.y;
     //calculate new top, left, width and height from original width and height
     const newTop = shapeContainer.referenceTop + dY;
     const newLeft = shapeContainer.referenceLeft + dX;
@@ -701,13 +725,13 @@ const Canvas = ({
     resetShapeContainerReferenceProps();
   };
 
-  const moveShapeContainer = (x: number, y: number) => {
+  const moveShapeContainer = (point: Point) => {
     setShapeContainer((s) => ({
       ...s,
-      top: y - XY.y,
-      left: x - XY.x,
-      referenceTop: y - XY.y,
-      referenceLeft: x - XY.x,
+      top: point.y - XY.y,
+      left: point.x - XY.x,
+      referenceTop: point.y - XY.y,
+      referenceLeft: point.x - XY.x,
     }));
   };
 
@@ -726,15 +750,15 @@ const Canvas = ({
       className="canvas-container"
       onMouseLeave={handelMouseLeave}
       onMouseEnter={handleMouseEnter}
+      onMouseUp={handleMainContainerMouseUp}
+      onMouseDown={handleMainContainerMouseDown}
+      onMouseMove={handleMainContainerMouseMove}
     >
       <div
         className="main-container"
         style={{
           zIndex: isDrawing ? 2 : 4,
         }}
-        onMouseDown={handleMainContainerMouseDown}
-        onMouseMove={handleMainContainerMouseMove}
-        onMouseUp={handleMainContainerMouseUp}
       >
         <div
           className="shape-container"
@@ -745,9 +769,10 @@ const Canvas = ({
             height: shapeContainer.height,
             outline: isDrawing ? "" : "1.4px dashed gray",
           }}
+          onMouseDown={handleShapeContainerMouseDown}
           onMouseLeave={handleShapeContainerMouseLeave}
           onMouseEnter={handleShapeContainerMouseEnter}
-          onMouseDown={handleShapeContainerMouseDown}
+          ref={shapeContainerRef}
         >
           <div className="aux-canvas-button-container">
             <canvas className="aux-canvas" ref={dynamicCanvasRef}></canvas>

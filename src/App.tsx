@@ -1,5 +1,5 @@
 //React
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 //React JSX Elements
 import Tool from "./components/tool.tsx";
@@ -7,7 +7,6 @@ import Canvas from "./components/canvas.tsx";
 import ColorPalette from "./components/colorPalette.tsx";
 
 //Interfaces
-import { Point } from "./interfaces/point.ts";
 import { IconTool } from "./interfaces/IconTool.ts";
 import { Dimension } from "./interfaces/dimension.ts";
 
@@ -28,9 +27,7 @@ import { Position } from "./interfaces/position.ts";
 
 const App = () => {
   const canvasContainer = useRef<HTMLDivElement>(null);
-  const [isDrawing, setIsDrawing] = useState<boolean>(false);
   const [currentColor, setCurrentColor] = useState<string>("");
-  const [currentShape, setCurrentShape] = useState<boolean>(true);
   const canvasPosition: Position = {
     left: canvasContainer.current?.getBoundingClientRect().left!,
     top: canvasContainer.current?.getBoundingClientRect().top!,
@@ -39,16 +36,6 @@ const App = () => {
   const [parentDimension, setParentDimension] = useState<Dimension>({
     width: 0,
     height: 0,
-  });
-
-  const [mouseDownPosition, setMouseDownPosition] = useState<Point>({
-    x: 0,
-    y: 0,
-  });
-
-  const [mouseMovePosition, setMouseMovePosition] = useState<Point>({
-    x: 0,
-    y: 0,
   });
 
   const [currentTool, setCurrentTool] = useState<IconTool>({
@@ -75,34 +62,6 @@ const App = () => {
       window.removeEventListener("wheel", handleWheel);
     };
   }, []);
-
-  const handleMouseDown = (event: React.MouseEvent<HTMLDivElement>): void => {
-    if (canvasContainer.current) {
-      const x = event.nativeEvent.offsetX;
-      const y = event.nativeEvent.offsetY;
-      if (currentShape == true) {
-        setIsDrawing(true);
-        setMouseDownPosition({ x: x, y: y });
-      }
-    }
-  };
-
-  const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (!isDrawing) return;
-    if (canvasContainer.current) {
-      const x = event.nativeEvent.offsetX;
-      const y = event.nativeEvent.offsetY;
-      if (currentShape == true) {
-        setMouseMovePosition({ x: x, y: y });
-      }
-    }
-  };
-
-  const handleMouseUp = () => {
-    if (currentShape == true) {
-      setIsDrawing(false);
-    }
-  };
 
   //list items
   const toolsItems: IconTool[] = [
@@ -195,22 +154,12 @@ const App = () => {
       </div>
 
       <div className="canvas-statusbar-container">
-        <div
-          ref={canvasContainer}
-          className="canvas-main-container"
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-        >
+        <div ref={canvasContainer} className="canvas-main-container">
           <Canvas
-            isDrawing={isDrawing}
             currentTool={currentTool}
             currentColor={currentColor}
             width={parentDimension.width}
             height={parentDimension.height}
-            positionDown={mouseDownPosition}
-            positionMove={mouseMovePosition}
-            setCurrentShape={setCurrentShape}
             canvasPosition={canvasPosition}
           ></Canvas>
         </div>
