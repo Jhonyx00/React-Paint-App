@@ -2,9 +2,9 @@
 import { useEffect, useRef, useState } from "react";
 
 //React JSX Elements
-import Tool from "./components/tool.tsx";
-import Canvas from "./components/canvas.tsx";
-import ColorPalette from "./components/colorPalette.tsx";
+import Tool from "./components/tool/tool.tsx";
+import Canvas from "./components/canvas/canvas.tsx";
+import ColorPalette from "./components/colorPalette/colorPalette.tsx";
 
 //Interfaces
 import { IconTool } from "./interfaces/IconTool.ts";

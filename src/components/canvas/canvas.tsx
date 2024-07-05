@@ -1,13 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
 
 //interfaces
-import { Point } from "../interfaces/point";
-import { IconTool } from "../interfaces/IconTool";
-import { ShapeContainer } from "../interfaces/shapeContainer";
+import { Point } from "../../interfaces/point";
+import { IconTool } from "../../interfaces/IconTool";
+import { ShapeContainer } from "../../interfaces/shapeContainer";
 
 //styles
 import "../styles/canvas.css";
-import { Position } from "../interfaces/position";
+import { Position } from "../../interfaces/position";
 
 const Canvas = ({
   width,

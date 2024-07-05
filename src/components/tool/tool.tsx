@@ -1,5 +1,5 @@
 import React from "react";
-import { CurrentTool, IconTool } from "../interfaces/IconTool";
+import { CurrentTool, IconTool } from "../../interfaces/IconTool";
 import "../styles/tool.css";
 
 const Tool = ({
