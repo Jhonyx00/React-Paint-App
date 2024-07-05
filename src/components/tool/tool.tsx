@@ -1,12 +1,16 @@
-import React from "react";
+import React, { Dispatch, SetStateAction } from "react";
 import { CurrentTool, IconTool } from "../../interfaces/IconTool";
-import "../styles/tool.css";
+import "./tool.css";
 
 const Tool = ({
   toolGroupName,
   toolItems,
   setCurrentTool,
-}: any): React.JSX.Element => {
+}: {
+  toolGroupName: string;
+  toolItems: IconTool[];
+  setCurrentTool: Dispatch<SetStateAction<CurrentTool>>;
+}): React.JSX.Element => {
   const handleClick = (tool: CurrentTool) => {
     setCurrentTool(tool);
   };

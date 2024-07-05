@@ -2,11 +2,14 @@ import React, { useEffect, useRef, useState } from "react";
 
 //interfaces
 import { Point } from "../../interfaces/point";
-import { IconTool } from "../../interfaces/IconTool";
+import { CurrentTool, IconTool } from "../../interfaces/IconTool";
 import { ShapeContainer } from "../../interfaces/shapeContainer";
 
+//data
+import { buttons, shapes } from "../../utilities/data";
+
 //styles
-import "../styles/canvas.css";
+import "./canvas.css";
 import { Position } from "../../interfaces/position";
 
 const Canvas = ({
@@ -18,7 +21,7 @@ const Canvas = ({
 }: {
   width: number;
   height: number;
-  currentTool: IconTool;
+  currentTool: CurrentTool;
   currentColor: string;
   canvasPosition: Position;
 }) => {
@@ -71,37 +74,6 @@ const Canvas = ({
     x: 0,
     y: 0,
   });
-
-  //arrays
-  const shapes = [
-    { name: "Rectangle", path: "M0 0, L0 150, L300 150, L300 0 Z" },
-    { name: "Ellipse", path: "M0 75 A150 75 0 1 0 300 75 A150 75 0 1 0 0 75" },
-    {
-      name: "Hexagon",
-      path: "M75 0, L0 75, L75 150, L225 150, L300 75, L225 0 Z",
-    },
-    { name: "Triangle", path: "M150 0, L0 150, L300 150 Z" },
-    { name: "Pentagon", path: "M150 0, L0 57, L54 150, L246 150, L300 57 Z" },
-    {
-      name: "Star",
-      path: "M150 0, L189 57, L300 57, L207 88.5, L246 150, L150 112.5, L54 150, L93 88.5, L0 57, L111 57, Z",
-    },
-    {
-      name: "Rhombus",
-      path: "M150 0, L0 75, L150,150 L300,75 Z",
-    },
-  ];
-
-  const buttons = [
-    { id: 1, class: "btn1" },
-    { id: 2, class: "btn2" },
-    { id: 3, class: "btn3" },
-    { id: 4, class: "btn4" },
-    { id: 5, class: "btn5" },
-    { id: 6, class: "btn6" },
-    { id: 7, class: "btn7" },
-    { id: 8, class: "btn8" },
-  ];
 
   useEffect(() => {
     if (canvasRef.current) {
@@ -526,10 +498,8 @@ const Canvas = ({
     ctx?.clearRect(left, top, width, height);
 
     if (!auxCanvas.current) return;
-
     auxCanvas.current.width = image.width;
     auxCanvas.current.height = image.height;
-
     ctxAux?.putImageData(image, 0, 0);
     auxCanvas.current.style.backgroundColor = "white";
 
@@ -565,22 +535,26 @@ const Canvas = ({
       moveShapeContainer(precisePoint);
     } else {
       setMouseMovePosition(precisePoint);
-      if (!isDrawing) return;
-      if (!isInside) return;
-      switch (currentTool.toolGroupID) {
-        case 1:
-        case 2:
-          drawShapeContainer();
-          break;
-        case 3:
-          drawLine();
-          break;
-        case 4:
-          erase();
-          break;
-        default:
-          break;
-      }
+      setAction();
+    }
+  };
+
+  const setAction = () => {
+    if (!isDrawing) return;
+    if (!isInside) return;
+    switch (currentTool.toolGroupID) {
+      case 1:
+      case 2:
+        drawShapeContainer();
+        break;
+      case 3:
+        drawLine();
+        break;
+      case 4:
+        erase();
+        break;
+      default:
+        break;
     }
   };
 
