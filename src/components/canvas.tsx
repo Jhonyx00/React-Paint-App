@@ -54,6 +54,9 @@ const Canvas = ({
   const [isDrawing, setIsDrawing] = useState<boolean>(false);
   const [imageData, setImageData] = useState<ImageData | undefined>(undefined);
 
+  const [resizedImage, setResizedImage] = useState<
+    HTMLImageElement | undefined
+  >();
   const [resizePoint, setResizePoint] = useState<Point>({
     x: 0,
     y: 0,
@@ -447,35 +450,38 @@ const Canvas = ({
 
     //inside shape container
     setResizePoint({ x: point.x, y: point.y });
-    //if "Selected is selected, cursor is inside shape container and there is no image yet"
-    if (currentTool.toolGroupID === 2 && !isImageData) {
-      setSelection();
-    }
 
-    if (!isOutside) return;
-    auxCanvas.current!.style.backgroundColor = "transparent";
+    if (isOutside) {
+      auxCanvas.current!.style.backgroundColor = "transparent";
+      //outside shape container
+      setMouseDownPosition({
+        x: point.x - canvasPosition.left,
+        y: point.y - canvasPosition.top,
+      });
 
-    //outside shape container
-    setMouseDownPosition({
-      x: point.x - canvasPosition.left,
-      y: point.y - canvasPosition.top,
-    });
+      if (ctx) {
+        ctx.strokeStyle = currentColor;
+        ctx.fillStyle = currentColor;
+        shapeContainer.background = currentColor;
+      }
 
-    if (ctx) {
-      ctx.strokeStyle = currentColor;
-      ctx.fillStyle = currentColor;
-      shapeContainer.background = currentColor;
-    }
-
-    if (currentTool.toolGroupID === 1) {
-      paintShape();
-      resetAuxCanvasDimension();
-      setPath(currentTool.toolId);
-    }
-    // "Select is selected"
-    if (currentTool.toolGroupID === 2) {
-      resetSelection();
-      ctxAux?.clearRect(0, 0, 300, 150); ////////
+      if (currentTool.toolGroupID === 1) {
+        paintShape();
+        resetAuxCanvasDimension();
+        setPath(currentTool.toolId);
+      }
+      // "Select is selected"
+      if (currentTool.toolGroupID === 2) {
+        resetSelection();
+        drawImage();
+        ctxAux?.clearRect(0, 0, 300, 150); ////////
+      }
+    } else {
+      //if "Selected is selected, cursor is inside shape container and there is no image yet"
+      if (currentTool.toolGroupID === 2 && !isImageData) {
+        /////////////////////////////////////
+        setSelection();
+      }
     }
   };
 
@@ -487,16 +493,25 @@ const Canvas = ({
   };
 
   const resetSelection = () => {
-    const { left, top, width, height } = shapeContainer;
+    const { width, height } = shapeContainer;
     ctxAux?.clearRect(0, 0, width, height);
     setIsImageData(false);
     setImageData(undefined);
-
+    setResizedImage(undefined);
     if (!auxCanvas.current) return;
     auxCanvas.current.style.backgroundColor = "transparent";
+  };
 
-    if (!ctx || !imageData) return;
-    ctx?.putImageData(imageData, left, top);
+  const drawImage = () => {
+    const { left, top, width, height } = shapeContainer;
+    if (!ctx) return;
+    if (imageData && resizedImage) {
+      ctx.fillStyle = "white"; //only if selection style is not transparent
+      ctx.fillRect(left, top, width, height);
+      ctx.drawImage(resizedImage, left, top, width, height);
+    } else if (imageData && !resizedImage) {
+      ctx?.putImageData(imageData, left, top);
+    }
   };
 
   const setSelection = () => {
@@ -512,11 +527,20 @@ const Canvas = ({
 
     auxCanvas.current.width = image.width;
     auxCanvas.current.height = image.height;
+
     ctxAux?.putImageData(image, 0, 0);
     auxCanvas.current.style.backgroundColor = "white";
 
     setIsImageData(true);
     setImageData(image);
+  };
+
+  const dsetResizedImageValues = () => {
+    if (!(isOnResizeButton && currentTool.toolGroupID === 2)) return;
+    if (!auxCanvas.current) return;
+    const img = new Image();
+    img.src = auxCanvas.current.toDataURL();
+    setResizedImage(img);
   };
 
   const handleMainContainerMouseMove = (
@@ -563,6 +587,7 @@ const Canvas = ({
     setIsOnShapeContainer(false);
     setIsOnResizeButton(false);
     resetShapeContainerReferenceProps();
+    dsetResizedImageValues();
   };
 
   const setResizeValues = (point: Point) => {
