@@ -11,7 +11,7 @@ import triangle from "../assets/triangle.svg";
 import pentagon from "../assets/pentagon.svg";
 import rectangle from "../assets/rectangle.svg";
 import select from "../assets/select.svg";
-import freeSelect from "../assets/free-form-select.svg";
+import LassoSelect from "../assets/free-form-select.svg";
 
 //arrays
 export const shapes = [
@@ -145,7 +145,7 @@ export const selectItems: IconTool[] = [
   {
     toolGroupID: 10,
     toolId: 2,
-    name: "FreeSelect",
-    icon: freeSelect,
+    name: "LassoSelect",
+    icon: LassoSelect,
   },
 ];

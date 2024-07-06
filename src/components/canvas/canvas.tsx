@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 
 //interfaces
 import { Point } from "../../interfaces/point";
-import { CurrentTool, IconTool } from "../../interfaces/IconTool";
+import { CurrentTool } from "../../interfaces/IconTool";
 import { ShapeContainer } from "../../interfaces/shapeContainer";
 
 //data
@@ -48,18 +48,22 @@ const Canvas = ({
     rotation: 0,
   });
 
-  const [isImageData, setIsImageData] = useState<boolean>(false);
+  const [shapePath, setShapePath] = useState<Path2D>();
+  const [pngImage, setPngImage] = useState<HTMLImageElement>(new Image());
+  const [lassoPath, setLassoPath] = useState<Point[]>([]);
   const [isOnShapeContainer, setIsOnShapeContainer] = useState<boolean>(false);
   const [isOnResizeButton, setIsOnResizeButton] = useState<boolean>(false);
   const [XY, setXY] = useState<Point>({ x: 0, y: 0 });
   const [buttonId, setButtonId] = useState<number>(0);
-  const [isOutside, setIsOutside] = useState<boolean>(true);
+  const [isOutsideShapeContainer, setIsOutsideShapeContainer] =
+    useState<boolean>(true);
   const [isDrawing, setIsDrawing] = useState<boolean>(false);
   const [imageData, setImageData] = useState<ImageData | undefined>(undefined);
 
   const [resizedImage, setResizedImage] = useState<
     HTMLImageElement | undefined
   >();
+
   const [resizePoint, setResizePoint] = useState<Point>({
     x: 0,
     y: 0,
@@ -74,6 +78,15 @@ const Canvas = ({
     x: 0,
     y: 0,
   });
+
+  const [bounding, setBounding] = useState({
+    minX: 0,
+    minY: 0,
+    maxX: 0,
+    maxY: 0,
+  });
+
+  const [lassoPoints, setLassoPoints] = useState<Point[]>([]);
 
   useEffect(() => {
     if (canvasRef.current) {
@@ -129,6 +142,7 @@ const Canvas = ({
       ctx.stroke();
       positionDown.x = positionMove.x;
       positionDown.y = positionMove.y;
+      setLassoPoints((prev) => [...prev, positionMove]);
     }
   };
 
@@ -304,8 +318,11 @@ const Canvas = ({
   };
 
   const setPath = (id: number) => {
-    const path = new Path2D(shapes[id - 1].path);
-    if (ctxAux) {
+    if (!ctxAux) return;
+    if (id < 0) {
+      ctxAux.clearRect(0, 0, 300, 150);
+    } else {
+      const path = new Path2D(shapes[id - 1].path);
       ctxAux.fillStyle = shapeContainer.background;
       ctxAux.clearRect(0, 0, 300, 150);
       ctxAux.fill(path);
@@ -402,61 +419,90 @@ const Canvas = ({
   };
 
   const handleShapeContainerMouseLeave = () => {
-    setIsOutside(true);
+    setIsOutsideShapeContainer(true);
   };
 
   const handleShapeContainerMouseEnter = () => {
-    setIsOutside(false);
+    setIsOutsideShapeContainer(false);
   };
 
-  //MAIN CONTAINER //////////////////////////////////////////
+  //MAIN CONTAINER
   const handleMainContainerMouseDown = (
     event: React.MouseEvent<HTMLDivElement>
   ) => {
-    setIsDrawing(true);
-    // resetShapeContainerReferenceProps();
     const point: Point = {
       x: event.clientX,
       y: event.clientY,
     };
 
-    if (!isInside) return; //inside canvas area
+    setIsDrawing(true);
+    // resetShapeContainerReferenceProps();
 
+    if (!isInside || !auxCanvas.current) return; //inside canvas area
     //inside shape container
-    setResizePoint({ x: point.x, y: point.y });
+    setLassoPoints([]);
+    setResizePoint(point);
+    //if "Selected is selected, cursor is inside shape container and there is no image yet"
+    if (currentTool.toolGroupID === 2 && !imageData) {
+      setSelection("white");
+      clearCanvasArea(currentTool.toolGroupID);
+    }
 
-    if (isOutside) {
-      auxCanvas.current!.style.backgroundColor = "transparent";
-      //outside shape container
-      setMouseDownPosition({
-        x: point.x - canvasPosition.left,
-        y: point.y - canvasPosition.top,
-      });
+    if (currentTool.toolGroupID === 10 && !imageData) {
+      setSelection("transparent");
+      setLassoImage();
+      clearCanvasArea(currentTool.toolGroupID);
+    }
 
-      if (ctx) {
-        ctx.strokeStyle = currentColor;
-        ctx.fillStyle = currentColor;
-        shapeContainer.background = currentColor;
-      }
+    //inside canvas
+    if (!isOutsideShapeContainer) return;
+    auxCanvas.current.style.backgroundColor = "transparent";
+    setMouseDownPosition({
+      x: point.x - canvasPosition.left,
+      y: point.y - canvasPosition.top,
+    });
 
-      if (currentTool.toolGroupID === 1) {
+    if (ctx) {
+      ctx.strokeStyle = currentColor;
+      ctx.fillStyle = currentColor;
+      shapeContainer.background = currentColor;
+    }
+
+    switch (currentTool.toolGroupID) {
+      case 1:
         paintShape();
         resetAuxCanvasDimension();
         setPath(currentTool.toolId);
-      }
-      // "Select is selected"
-      if (currentTool.toolGroupID === 2) {
+        break;
+
+      case 2:
         resetSelection();
         drawImage();
-        ctxAux?.clearRect(0, 0, 300, 150); ////////
-      }
-    } else {
-      //if "Selected is selected, cursor is inside shape container and there is no image yet"
-      if (currentTool.toolGroupID === 2 && !isImageData) {
-        /////////////////////////////////////
-        setSelection();
-      }
+        ctxAux?.clearRect(0, 0, 300, 150);
+        break;
+
+      case 10:
+        drawLassoImage();
+        resetSelection();
+        setPath(-1);
+        /* set an initial value to start comparing in setMinMaxXY function,
+        in order to get box dimensions of shapeContainer */
+        setBounding({ minX: 0, minY: 0, maxX: 0, maxY: 0 });
+        setBounding((prev) => ({
+          ...prev,
+          minX: event.clientX,
+          minY: event.clientY,
+        }));
+        break;
+
+      default:
+        break;
     }
+  };
+
+  const drawLassoImage = () => {
+    const { left, top, width, height } = shapeContainer;
+    ctx?.drawImage(pngImage, left, top, width, height);
   };
 
   const resetAuxCanvasDimension = () => {
@@ -469,7 +515,6 @@ const Canvas = ({
   const resetSelection = () => {
     const { width, height } = shapeContainer;
     ctxAux?.clearRect(0, 0, width, height);
-    setIsImageData(false);
     setImageData(undefined);
     setResizedImage(undefined);
     if (!auxCanvas.current) return;
@@ -488,26 +533,68 @@ const Canvas = ({
     }
   };
 
-  const setSelection = () => {
+  const setSelection = (background: string) => {
     const { left, top, width, height } = shapeContainer;
-
     if (!(width > 0 && height > 0)) return;
     const image = ctx?.getImageData(left, top, width, height);
-
     if (!image) return;
-    ctx?.clearRect(left, top, width, height);
-
     if (!auxCanvas.current) return;
     auxCanvas.current.width = image.width;
     auxCanvas.current.height = image.height;
     ctxAux?.putImageData(image, 0, 0);
-    auxCanvas.current.style.backgroundColor = "white";
-
-    setIsImageData(true);
+    auxCanvas.current.style.backgroundColor = background;
     setImageData(image);
   };
 
-  const dsetResizedImageValues = () => {
+  const clearCanvasArea = (toolId: number) => {
+    const { left, top, width, height } = shapeContainer;
+
+    if (!ctx) return;
+    if (toolId == 2) {
+      ctx.clearRect(left, top, width, height);
+    } else {
+      if (!shapePath || !pngImage) return;
+      pngImage.onload = () => {
+        ctx.translate(left, top);
+        ctx.fillStyle = "white";
+        ctx.fill(shapePath);
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+      };
+    }
+  };
+
+  const setLassoImage = () => {
+    const { left, top, width, height } = shapeContainer;
+    const img = new Image();
+    if (!auxCanvas.current) return;
+    img.src = auxCanvas.current.toDataURL();
+
+    img.onload = () => {
+      ctxAux?.clearRect(0, 0, width, height);
+
+      // if (!shapePath) return
+      //  shapePath.moveTo(lassoPath[0].x - left, lassoPath[0].y - top);
+
+      setShapePath(new Path2D());
+
+      if (!shapePath || !ctxAux || !auxCanvas.current) return;
+
+      for (let i = 0; i < lassoPath.length; i++) {
+        shapePath.lineTo(lassoPath[i].x - left, lassoPath[i].y - top);
+      }
+
+      shapePath.closePath();
+      ctxAux.clip(shapePath);
+      ctxAux.drawImage(img, 0, 0);
+
+      const base64 = auxCanvas.current.toDataURL();
+
+      pngImage.src = base64;
+      ctxAux.drawImage(pngImage, 0, 0);
+    };
+  };
+
+  const setResizedImageValues = () => {
     if (!(isOnResizeButton && currentTool.toolGroupID === 2)) return;
     if (!auxCanvas.current) return;
     const img = new Image();
@@ -553,17 +640,66 @@ const Canvas = ({
       case 4:
         erase();
         break;
+
+      case 10:
+        drawwLasso();
+        break;
       default:
         break;
     }
   };
 
+  const drawwLasso = () => {
+    if (!ctx) return;
+    ctx.strokeStyle = "blue";
+    ctx.lineWidth = 1;
+
+    drawLine();
+    setMinMaxXY();
+  };
+
+  // set bounding of shapeContainer after drawing
+  const setMinMaxXY = () => {
+    if (positionMove.x < bounding.minX) {
+      setBounding((prev) => ({ ...prev, minX: positionMove.x }));
+    }
+    if (positionMove.y < bounding.minY) {
+      setBounding((prev) => ({ ...prev, minY: positionMove.y }));
+    }
+    if (positionMove.x > bounding.maxX) {
+      setBounding((prev) => ({ ...prev, maxX: positionMove.x }));
+    }
+    if (positionMove.y > bounding.maxY) {
+      setBounding((prev) => ({ ...prev, maxY: positionMove.y }));
+    }
+  };
   const handleMainContainerMouseUp = () => {
     setIsDrawing(false);
     setIsOnShapeContainer(false);
     setIsOnResizeButton(false);
     resetShapeContainerReferenceProps();
-    dsetResizedImageValues();
+    setResizedImageValues();
+    setLassoValues();
+  };
+
+  const setLassoValues = () => {
+    if (!(!imageData && currentTool.toolGroupID === 10)) return;
+    setLassoFrame();
+    setLassoPath(lassoPoints);
+  };
+
+  const setLassoFrame = () => {
+    const frameWidth = bounding.maxX - bounding.minX;
+    const frameHeight = bounding.maxY - bounding.minY;
+
+    setShapeContainer((s) => ({
+      ...s,
+      left: bounding.minX,
+      top: bounding.minY,
+      width: frameWidth,
+      height: frameHeight,
+      componentClass: "LassoSelect",
+    }));
   };
 
   const setResizeValues = (point: Point) => {
