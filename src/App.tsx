@@ -14,6 +14,7 @@ import { Dimension } from "./interfaces/dimension.ts";
 import "./App.css";
 import { Position } from "./interfaces/position.ts";
 import { shapeItems, toolsItems, selectItems } from "./utilities/data.ts";
+import { Point } from "./interfaces/point.ts";
 
 const App = () => {
   const canvasContainer = useRef<HTMLDivElement>(null);
@@ -23,7 +24,7 @@ const App = () => {
     top: canvasContainer.current?.getBoundingClientRect().top!,
   };
 
-  const [parentDimension, setParentDimension] = useState<Dimension>({
+  const [parentSize, setParentSize] = useState<Dimension>({
     width: 0,
     height: 0,
   });
@@ -34,9 +35,14 @@ const App = () => {
     name: "Line",
   });
 
+  const [cursorPosition, setCursorPosition] = useState<Point>({
+    x: 0,
+    y: 0,
+  });
+
   useEffect(() => {
     if (canvasContainer.current) {
-      setParentDimension({
+      setParentSize({
         width: canvasContainer.current.clientWidth,
         height: canvasContainer.current.clientHeight,
       });
@@ -51,6 +57,14 @@ const App = () => {
       window.removeEventListener("wheel", handleWheel);
     };
   }, []);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const precisePoint: Point = {
+      x: e.clientX - canvasPosition.left,
+      y: e.clientY - canvasPosition.top,
+    };
+    setCursorPosition(precisePoint);
+  };
 
   return (
     <div className="toolbar-canvas-container">
@@ -74,19 +88,36 @@ const App = () => {
       </div>
 
       <div className="canvas-statusbar-container">
-        <div ref={canvasContainer} className="canvas-main-container">
+        <div
+          ref={canvasContainer}
+          className="canvas-main-container"
+          onMouseMove={handleMouseMove}
+        >
           <Canvas
             currentTool={currentTool}
             currentColor={currentColor}
-            width={parentDimension.width}
-            height={parentDimension.height}
+            width={parentSize.width}
+            height={parentSize.height}
             canvasPosition={canvasPosition}
           ></Canvas>
         </div>
 
         <div className="status-bar-container">
-          {parentDimension.width} × {parentDimension.height}pixels,
-          {currentTool.name}
+          <span className="dimension">
+            Size:{" "}
+            <b>
+              {parentSize.width}, {parentSize.height}pixels
+            </b>
+          </span>
+          <span className="current-tool">
+            Selected: <b>{currentTool.name}</b>
+          </span>
+          <span className="position">
+            Position:{" "}
+            <b>
+              {cursorPosition.x}, {cursorPosition.y}pixels
+            </b>
+          </span>
         </div>
       </div>
     </div>

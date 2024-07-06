@@ -145,7 +145,7 @@ export const selectItems: IconTool[] = [
   {
     toolGroupID: 10,
     toolId: 2,
-    name: "LassoSelect",
+    name: "Lasso",
     icon: LassoSelect,
   },
 ];

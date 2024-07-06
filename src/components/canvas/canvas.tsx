@@ -30,10 +30,26 @@ const Canvas = ({
   const auxCanvas = useRef<HTMLCanvasElement>(null);
   const shapeContainerRef = useRef<HTMLDivElement>(null);
   const ctxAux = auxCanvas.current?.getContext("2d");
-
   //useState
-  const [ctx, setContext] = useState<CanvasRenderingContext2D>();
   const [isInside, setIsInside] = useState(false);
+  const [XY, setXY] = useState<Point>({ x: 0, y: 0 });
+  const [shapePath, setShapePath] = useState<Path2D>();
+  const [lassoPath, setLassoPath] = useState<Point[]>([]);
+  const [isDrawing, setIsDrawing] = useState<boolean>(false);
+  const [lassoPoints, setLassoPoints] = useState<Point[]>([]);
+  const [ctx, setContext] = useState<CanvasRenderingContext2D>();
+  const [pngImage, setPngImage] = useState<HTMLImageElement>(new Image());
+  const [isOnResizeButton, setIsOnResizeButton] = useState<boolean>(false);
+  const [isOnShapeContainer, setIsOnShapeContainer] = useState<boolean>(false);
+  const [imageData, setImageData] = useState<ImageData | undefined>(undefined);
+  const [buttonId, setButtonId] = useState<number>(0);
+  const [isOutsideShapeContainer, setIsOutsideShapeContainer] =
+    useState<boolean>(true);
+
+  const [resizedImage, setResizedImage] = useState<
+    HTMLImageElement | undefined
+  >();
+
   const [shapeContainer, setShapeContainer] = useState<ShapeContainer>({
     top: 0,
     left: 0,
@@ -47,23 +63,6 @@ const Canvas = ({
     referenceHeight: 0,
     rotation: 0,
   });
-
-  const [shapePath, setShapePath] = useState<Path2D>();
-  const [pngImage, setPngImage] = useState<HTMLImageElement>(new Image());
-  const [lassoPath, setLassoPath] = useState<Point[]>([]);
-  const [isOnShapeContainer, setIsOnShapeContainer] = useState<boolean>(false);
-  const [isOnResizeButton, setIsOnResizeButton] = useState<boolean>(false);
-  const [XY, setXY] = useState<Point>({ x: 0, y: 0 });
-  const [buttonId, setButtonId] = useState<number>(0);
-  const [isOutsideShapeContainer, setIsOutsideShapeContainer] =
-    useState<boolean>(true);
-  const [isDrawing, setIsDrawing] = useState<boolean>(false);
-  const [imageData, setImageData] = useState<ImageData | undefined>(undefined);
-
-  const [resizedImage, setResizedImage] = useState<
-    HTMLImageElement | undefined
-  >();
-
   const [resizePoint, setResizePoint] = useState<Point>({
     x: 0,
     y: 0,
@@ -85,8 +84,6 @@ const Canvas = ({
     maxX: 0,
     maxY: 0,
   });
-
-  const [lassoPoints, setLassoPoints] = useState<Point[]>([]);
 
   useEffect(() => {
     if (canvasRef.current) {
@@ -550,7 +547,7 @@ const Canvas = ({
     const { left, top, width, height } = shapeContainer;
 
     if (!ctx) return;
-    if (toolId == 2) {
+    if (toolId === 2) {
       ctx.clearRect(left, top, width, height);
     } else {
       if (!shapePath || !pngImage) return;
@@ -698,7 +695,7 @@ const Canvas = ({
       top: bounding.minY,
       width: frameWidth,
       height: frameHeight,
-      componentClass: "LassoSelect",
+      componentClass: "Lasso",
     }));
   };
 
