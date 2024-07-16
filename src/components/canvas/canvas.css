@@ -8,6 +8,7 @@
     height: 100%;
     position: absolute;
     overflow: hidden;
+
     .shape-container {
       position: absolute;
       cursor: move;
@@ -35,7 +36,7 @@
             width: 2em;
             height: 2em;
             position: inherit;
-            border: 1px solid rgb(0, 255, 85);
+            z-index: 3;
           }
 
           .btn1::after,

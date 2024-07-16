@@ -76,9 +76,9 @@ export const toolsItems: IconTool[] = [
     icon: eraser,
   },
   {
-    toolGroupID: 3,
+    toolGroupID: 5,
     toolId: 3,
-    name: "Pencil",
+    name: "IrregularShape",
     icon: rectangle,
   },
   {
