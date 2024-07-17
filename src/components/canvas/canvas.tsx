@@ -6,7 +6,7 @@ import { CurrentTool } from "../../interfaces/IconTool";
 import { ShapeContainer } from "../../interfaces/shapeContainer";
 
 //data
-import { buttons, shapes } from "../../utilities/data";
+import { resizeButtons, shapes } from "../../utilities/data";
 
 //styles
 import "./canvas.css";
@@ -18,21 +18,21 @@ const Canvas = ({
   currentTool,
   currentColor,
   canvasPosition,
+  lineWidth,
 }: {
   width: number;
   height: number;
   currentTool: CurrentTool;
   currentColor: string;
   canvasPosition: Position;
+  lineWidth: number;
 }) => {
   //refs
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const auxCanvas = useRef<HTMLCanvasElement>(null);
-  const shapeContainerRef = useRef<HTMLDivElement>(null);
   const ctxAux = auxCanvas.current?.getContext("2d");
   //useState
 
-  const [isInside, setIsInside] = useState(false);
   const [XY, setXY] = useState<Point>({ x: 0, y: 0 });
   const [shapePath, setShapePath] = useState<Path2D>();
   const [lassoPath, setLassoPath] = useState<Point[]>([]);
@@ -40,13 +40,9 @@ const Canvas = ({
   const [lassoPoints, setLassoPoints] = useState<Point[]>([]);
   const [ctx, setContext] = useState<CanvasRenderingContext2D>();
   const [pngImage, setPngImage] = useState<HTMLImageElement>(new Image());
-  const [isPngImage, setIsPngImage] = useState<boolean | undefined>(false);
-  const [isOnResizeButton, setIsOnResizeButton] = useState<boolean>(false);
-  const [isOnShapeContainer, setIsOnShapeContainer] = useState<boolean>(false);
+  // const [isPngImage, setIsPngImage] = useState<boolean | undefined>(false);
   const [imageData, setImageData] = useState<ImageData | undefined>(undefined);
-  const [buttonId, setButtonId] = useState<number>(0);
-  const [isOutsideShapeContainer, setIsOutsideShapeContainer] =
-    useState<boolean>(true);
+  const [resizeButtonId, setResizeButtonId] = useState<number>(0);
 
   const [resizedImage, setResizedImage] = useState<
     HTMLImageElement | undefined
@@ -64,10 +60,6 @@ const Canvas = ({
     referenceWidth: 0,
     referenceHeight: 0,
     rotation: 0,
-  });
-  const [resizePoint, setResizePoint] = useState<Point>({
-    x: 0,
-    y: 0,
   });
 
   const [positionDown, setMouseDownPosition] = useState<Point>({
@@ -87,6 +79,12 @@ const Canvas = ({
     maxY: 0,
   });
 
+  const buttons = useRef<HTMLDivElement>(null);
+  const canvasContainer = useRef<HTMLDivElement>(null);
+  const [cursorState, setCursorState] = useState<
+    "onShapeContainer" | "onResizeButton" | "onCanvas"
+  >();
+
   useEffect(() => {
     if (canvasRef.current) {
       const ctx = canvasRef.current.getContext("2d", {
@@ -97,11 +95,6 @@ const Canvas = ({
       }
     }
   }, []);
-  // console.log("is drawing", isDrawing);
-  // console.log("is onresizeButton", isOnResizeButton);
-  // console.log("is onShapeContainer", isOnShapeContainer);
-  // console.log("is outsideShapeContainer", isOutsideShapeContainer);
-  // console.log("is drawing", shapeContainer.isRendered);
 
   const paintShape = () => {
     switch (shapeContainer.componentClass) {
@@ -397,73 +390,18 @@ const Canvas = ({
     }
   };
 
-  const handelMouseLeave = () => {
-    setIsInside(false);
-
-    switch (currentTool.toolGroupID) {
-      case 1:
-        paintShape();
-        break;
-
-      case 2:
-        drawImage();
-        break;
-
-      case 5:
-      case 10:
-        drawLassoImage();
-        break;
-
-      default:
-        break;
-    }
-
-    resetShapeContainerProps();
-  };
-
-  const handleMouseEnter = () => {
-    setIsInside(true);
-  };
-
-  //SHAPE CONTAINER
-
-  const handleShapeContainerMouseDown = (
-    event: React.MouseEvent<HTMLDivElement>
-  ) => {
-    setIsOnShapeContainer(true);
-
-    setXY({
-      x: event.clientX - shapeContainer.left - canvasPosition.left,
-      y: event.clientY - shapeContainer.top - canvasPosition.top,
-    });
-  };
-
-  const handleShapeContainerMouseLeave = () => {
-    setIsOutsideShapeContainer(true);
-  };
-
-  const handleShapeContainerMouseEnter = () => {
-    setIsOutsideShapeContainer(false);
-  };
-
   //MAIN CONTAINER
-  const handleMainContainerMouseDown = (
-    event: React.MouseEvent<HTMLDivElement>
-  ) => {
-    const point: Point = {
-      x: event.clientX,
-      y: event.clientY,
-    };
-
+  const handleMainContainerMouseDown = (event: React.MouseEvent) => {
     setIsDrawing(true);
 
-    if (isOutsideShapeContainer) {
-      resetShapeContainerProps();
-      setMouseDownPosition({
-        x: point.x - canvasPosition.left,
-        y: point.y - canvasPosition.top,
-      });
+    setMouseDownPosition({
+      x: event.clientX - canvasPosition.left,
+      y: event.clientY - canvasPosition.top,
+    });
 
+    if (event.target === canvasRef.current) {
+      resetShapeContainerProps();
+      setCursorState("onCanvas");
       if (!auxCanvas.current) return; //inside canvas area
       auxCanvas.current.style.backgroundColor = "transparent";
 
@@ -471,6 +409,8 @@ const Canvas = ({
         ctx.strokeStyle = currentColor;
         ctx.fillStyle = currentColor;
         shapeContainer.background = currentColor;
+        ctx.lineWidth = lineWidth;
+        ctx.lineCap = "round";
       }
 
       switch (currentTool.toolGroupID) {
@@ -517,10 +457,13 @@ const Canvas = ({
         default:
           break;
       }
-    } else {
-      //inside shape container
-      setResizePoint(point);
-      //if "Selected is selected, cursor is inside shape container and there is no image yet"
+    } else if (event.target === buttons.current) {
+      setCursorState("onShapeContainer");
+      setXY({
+        x: event.clientX - shapeContainer.left - canvasPosition.left,
+        y: event.clientY - shapeContainer.top - canvasPosition.top,
+      });
+
       if (currentTool.toolGroupID === 2 && !imageData) {
         setSelection("white");
         clearCanvasArea();
@@ -535,6 +478,13 @@ const Canvas = ({
       if (currentTool.toolGroupID === 5 && !imageData) {
         setIrregularShape();
       }
+    } else {
+      setCursorState("onResizeButton");
+
+      // if (currentTool.toolGroupID === 5 && !imageData) {
+      //   setIrregularShape();
+      // }
+      setMouseDownPosition({ x: event.clientX, y: event.clientY });
     }
   };
 
@@ -567,6 +517,7 @@ const Canvas = ({
     setImageData(undefined);
     ctxAux.fillStyle = currentColor;
     if (!auxCanvas.current) return;
+
     auxCanvas.current.style.backgroundColor = "transparent";
   };
 
@@ -660,7 +611,7 @@ const Canvas = ({
 
   const setResizedImageValues = () => {
     if (!auxCanvas.current) return;
-    if (!isOnResizeButton) return;
+    if (cursorState !== "onResizeButton") return;
     const img = new Image();
     img.src = auxCanvas.current.toDataURL();
     setResizedImage(img);
@@ -679,19 +630,29 @@ const Canvas = ({
       y: point.y - canvasPosition.top,
     };
 
-    if (isOnResizeButton) {
-      setResizeValues(point);
-    } else if (isOnShapeContainer) {
-      moveShapeContainer(precisePoint);
-    } else {
-      setMouseMovePosition(precisePoint);
-      setAction();
+    setMouseMovePosition(precisePoint);
+
+    switch (cursorState) {
+      case "onCanvas":
+        setAction();
+        break;
+
+      case "onShapeContainer":
+        moveShapeContainer(precisePoint);
+        break;
+
+      case "onResizeButton":
+        setResizeValues(point);
+        break;
+
+      default:
+        break;
     }
   };
 
+  ///// cuando cambio de color no se quita el ultimo path en el drawFreeFormShape
   const setAction = () => {
     if (!isDrawing) return;
-    if (!isInside) return;
     switch (currentTool.toolGroupID) {
       case 1:
       case 2:
@@ -744,8 +705,6 @@ const Canvas = ({
         setResizedImageValues();
       }
       resetShapeContainerReferenceProps();
-      setIsOnResizeButton(false);
-      setIsOnShapeContainer(false);
     }
   };
 
@@ -772,9 +731,10 @@ const Canvas = ({
   };
 
   const setResizeValues = (point: Point) => {
+    if (!isDrawing) return;
     //calculate value from mousedown to offset
-    const dX = point.x - resizePoint.x;
-    const dY = point.y - resizePoint.y;
+    const dX = point.x - positionDown.x;
+    const dY = point.y - positionDown.y;
     //calculate new top, left, width and height from original width and height
     const newTop = shapeContainer.referenceTop + dY;
     const newLeft = shapeContainer.referenceLeft + dX;
@@ -784,7 +744,7 @@ const Canvas = ({
     const newInverseHeight = shapeContainer.referenceHeight + dY;
     //set new values to shapeContainer if the new values are greather than zero
 
-    switch (buttonId) {
+    switch (resizeButtonId) {
       case 1:
         nwResize(newLeft, newTop, newWidth, newHeight);
         break;
@@ -967,15 +927,11 @@ const Canvas = ({
   };
 
   const handleButtonMouseDown = (buttonId: number) => {
-    setIsOnResizeButton(true);
-    setButtonId(buttonId);
-  };
-
-  const handleButtonMouseUp = () => {
-    setIsOnResizeButton(false);
+    setResizeButtonId(buttonId);
   };
 
   const moveShapeContainer = (point: Point) => {
+    if (!isDrawing) return;
     setShapeContainer((s) => ({
       ...s,
       top: point.y - XY.y,
@@ -998,45 +954,35 @@ const Canvas = ({
   return (
     <div
       className="canvas-container"
-      onMouseLeave={handelMouseLeave}
-      onMouseEnter={handleMouseEnter}
-      onMouseUp={handleMainContainerMouseUp}
-      onMouseDown={handleMainContainerMouseDown}
-      onMouseMove={handleMainContainerMouseMove}
+      onPointerDown={handleMainContainerMouseDown}
+      onPointerMove={handleMainContainerMouseMove}
+      onPointerUp={handleMainContainerMouseUp}
+      ref={canvasContainer}
     >
       <div
-        className="main-container"
+        className="canvas-buttons"
         style={{
-          zIndex: shapeContainer ? 4 : 2,
+          left: shapeContainer.left,
+          top: shapeContainer.top,
+          width: shapeContainer.width,
+          height: shapeContainer.height,
+          outline: "1px dashed gray",
+          boxShadow: "0px 0px 0px 1px white",
         }}
       >
-        <div
-          className="shape-container"
-          style={{
-            left: shapeContainer.left,
-            top: shapeContainer.top,
-            width: shapeContainer.width,
-            height: shapeContainer.height,
-            outline: isDrawing ? "" : "1.4px dashed gray",
-          }}
-          onMouseDown={handleShapeContainerMouseDown}
-          onMouseLeave={handleShapeContainerMouseLeave}
-          onMouseEnter={handleShapeContainerMouseEnter}
-          ref={shapeContainerRef}
-        >
-          <div className="aux-canvas-button-container">
-            <canvas className="aux-canvas" ref={auxCanvas}></canvas>
-            <div className="btn-container">
-              {buttons.map((button) => (
+        <div className="btn-container">
+          <canvas className="shape-container" ref={auxCanvas}></canvas>
+          {!isDrawing && (
+            <div className="buttons" ref={buttons}>
+              {resizeButtons.map((button) => (
                 <button
                   key={button.id}
                   className={button.class}
-                  onMouseDown={() => handleButtonMouseDown(button.id)}
-                  onMouseUp={handleButtonMouseUp}
+                  onPointerDown={() => handleButtonMouseDown(button.id)}
                 ></button>
               ))}
             </div>
-          </div>
+          )}
         </div>
       </div>
 
@@ -1046,11 +992,6 @@ const Canvas = ({
         width={width}
         className="canvas"
       ></canvas>
-
-      <div
-        className="canvas-shield"
-        style={{ width: width, height: height }}
-      ></div>
     </div>
   );
 };

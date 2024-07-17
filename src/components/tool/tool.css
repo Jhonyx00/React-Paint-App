@@ -6,14 +6,15 @@
 .tool-item-container {
   display: grid;
   place-items: center;
-  gap: 5px;
+  margin: 8px;
   padding: 5px;
-  box-shadow: 0px 0px 3px 3px lightgray;
-  border-radius: 0.4em;
-  margin: 10px;
+  border-radius: 0.6em;
+  background-color: white;
+  border: 2px solid lightgray;
+  gap: 5px;
 
   .text {
-    font-size: 14px;
+    font-size: 12px;
   }
 
   .tool {
@@ -21,12 +22,12 @@
     place-items: center;
 
     button {
-      background-color: transparent;
       border: none;
       width: 2em;
       height: 2em;
       border-radius: 0.4em;
       padding: 0.2em;
+      background-color: white;
     }
     button:hover:not(.selected-tool) {
       cursor: pointer;
@@ -36,17 +37,16 @@
 
   .Tools {
     grid-template-columns: repeat(3, 1fr);
-    grid-template-rows: repeat(2, 1fr);
-    padding: 5px;
-    gap: 5px;
+    width: 100%;
   }
 
   .Shapes {
     grid-template-columns: repeat(3, 1fr);
-    gap: 5px;
-    height: 101.32px;
-    overflow: auto;
-    scrollbar-width: thin;
-    padding: 5px;
+    width: 100%;
+    /* height: calc(6em + 5.6px); */
+  }
+
+  .Select {
+    grid-template-columns: repeat(2, 1fr);
   }
 }

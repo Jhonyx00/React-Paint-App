@@ -6,7 +6,7 @@
   grid-template-columns: 130px calc(100% - 130px);
 
   .toolbar-container {
-    background-color: rgb(237, 237, 237);
+    background-color: rgb(232, 232, 232);
     height: 100vh;
   }
   .canvas-statusbar-container {
@@ -43,4 +43,26 @@
       }
     }
   }
+
+  .lineWidth {
+    background-color: white;
+
+    /* width: 100%; */
+    margin: 10px;
+    padding: 5px;
+    border: 2px solid lightgray;
+    border-radius: 0.6em;
+    display: grid;
+    place-items: center;
+    span {
+      font-size: 12px;
+      /* padding: 5px; */
+    }
+    input {
+      width: 100%;
+    }
+  }
 }
+/* * {
+  border: 1px solid red;
+} */

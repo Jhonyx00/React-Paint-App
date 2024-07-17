@@ -33,7 +33,7 @@ export const shapes = [
   },
 ];
 
-export const buttons = [
+export const resizeButtons = [
   { id: 1, class: "btn1" },
   { id: 2, class: "btn2" },
   { id: 3, class: "btn3" },

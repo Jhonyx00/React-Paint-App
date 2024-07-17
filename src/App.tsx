@@ -66,6 +66,14 @@ const App = () => {
     setCursorPosition(precisePoint);
   };
 
+  const [lineWidth, setLineWidth] = useState<number>(1);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log(e.target.value);
+    const value = e.target.value;
+    setLineWidth(parseInt(value));
+  };
+
   return (
     <div className="toolbar-canvas-container">
       <div className="toolbar-container">
@@ -85,6 +93,17 @@ const App = () => {
           setCurrentTool={setCurrentTool}
         />
         <ColorPalette setCurrentColor={setCurrentColor} />
+
+        <div className="lineWidth">
+          <span>Size</span>
+          <input
+            type="range"
+            min={1}
+            max={100}
+            onChange={handleChange}
+            value={lineWidth}
+          />
+        </div>
       </div>
 
       <div className="canvas-statusbar-container">
@@ -99,6 +118,7 @@ const App = () => {
             width={parentSize.width}
             height={parentSize.height}
             canvasPosition={canvasPosition}
+            lineWidth={lineWidth}
           ></Canvas>
         </div>
 
