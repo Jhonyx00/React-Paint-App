@@ -96,13 +96,16 @@ const App = () => {
 
         <div className="lineWidth">
           <span>Size</span>
-          <input
-            type="range"
-            min={1}
-            max={100}
-            onChange={handleChange}
-            value={lineWidth}
-          />
+          <div className="size">
+            <input
+              type="range"
+              min={1}
+              max={100}
+              onChange={handleChange}
+              value={lineWidth}
+            />
+            <span>{lineWidth}</span>
+          </div>
         </div>
       </div>
 

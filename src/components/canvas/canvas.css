@@ -31,6 +31,7 @@
           width: 2em;
           height: 2em;
           position: inherit;
+          background-color: transparent;
         }
 
         .btn1::after,

@@ -27,7 +27,7 @@
       flex-direction: row;
       justify-content: center;
       align-items: center;
-      background-color: rgb(223, 223, 223);
+      background-color: rgb(232, 232, 232);
 
       span {
         font-size: 0.8em;
@@ -46,23 +46,26 @@
 
   .lineWidth {
     background-color: white;
-
-    /* width: 100%; */
-    margin: 10px;
+    margin: 5px;
     padding: 5px;
     border: 2px solid lightgray;
     border-radius: 0.6em;
     display: grid;
     place-items: center;
+
     span {
       font-size: 12px;
-      /* padding: 5px; */
+      color: gray;
+      font-weight: 500;
     }
-    input {
-      width: 100%;
+    .size {
+      display: grid;
+      grid-template-columns: 80% 20%;
+      place-items: center;
+
+      input {
+        width: 100%;
+      }
     }
   }
 }
-/* * {
-  border: 1px solid red;
-} */

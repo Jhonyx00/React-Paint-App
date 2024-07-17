@@ -6,8 +6,8 @@
 .tool-item-container {
   display: grid;
   place-items: center;
-  margin: 8px;
   padding: 5px;
+  margin: 5px;
   border-radius: 0.6em;
   background-color: white;
   border: 2px solid lightgray;
@@ -15,6 +15,8 @@
 
   .text {
     font-size: 12px;
+    color: gray;
+    font-weight: 500;
   }
 
   .tool {
@@ -27,7 +29,7 @@
       height: 2em;
       border-radius: 0.4em;
       padding: 0.2em;
-      background-color: white;
+      background-color: inherit;
     }
     button:hover:not(.selected-tool) {
       cursor: pointer;

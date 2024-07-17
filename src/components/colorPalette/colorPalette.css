@@ -3,13 +3,15 @@
   place-items: center;
   border-radius: 0.4em;
   border: 2px solid lightgray;
-  margin: 10px;
+  margin: 5px;
   background-color: white;
   padding: 5px;
 
   span {
     font-size: 12px;
     text-align: center;
+    color: gray;
+    font-weight: 500;
   }
   .palette {
     list-style: none;
@@ -33,10 +35,9 @@
 
     .color-chooser {
       cursor: pointer;
-      border: 1px solid gray;
-
-      width: 3em;
-      height: 3em;
+      border: 1px solid lightgray;
+      width: 2.4em;
+      height: 2.4em;
     }
   }
 }
