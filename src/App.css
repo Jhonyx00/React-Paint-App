@@ -15,7 +15,6 @@
     display: grid;
     grid-template-rows: 95vh 5vh;
     background-color: rgb(158, 158, 158);
-
     .canvas-main-container {
       overflow: auto;
       scrollbar-width: thin;
@@ -49,7 +48,7 @@
     margin: 5px;
     padding: 5px;
     border: 2px solid lightgray;
-    border-radius: 0.6em;
+    /* border-radius: 0.6em; */
     display: grid;
     place-items: center;
 

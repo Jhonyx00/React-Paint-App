@@ -6,18 +6,28 @@ const Tool = ({
   toolGroupName,
   toolItems,
   setCurrentTool,
+  setSelected,
 }: {
   toolGroupName: string;
   toolItems: IconTool[];
   setCurrentTool: Dispatch<SetStateAction<CurrentTool>>;
-}): React.JSX.Element => {
+  setSelected: Dispatch<SetStateAction<boolean>>;
+}) => {
   const handleClick = (tool: CurrentTool) => {
     setCurrentTool(tool);
   };
 
+  const handleToolClick = () => {
+    if (toolGroupName === "Shapes") {
+      setSelected((prev) => !prev);
+    }
+  };
+
   return (
     <div className="tool-item-container">
-      <span className="text">{toolGroupName}</span>
+      <span className="text" onClick={handleToolClick}>
+        {toolGroupName} {toolGroupName === "Shapes" ? "›" : ""}
+      </span>
       <div className={toolGroupName + " tool"}>
         {toolItems.map((item: IconTool) => (
           <button

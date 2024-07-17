@@ -1,4 +1,10 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, {
+  Dispatch,
+  SetStateAction,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 //interfaces
 import { Point } from "../../interfaces/point";
@@ -6,41 +12,44 @@ import { CurrentTool } from "../../interfaces/IconTool";
 import { ShapeContainer } from "../../interfaces/shapeContainer";
 
 //data
-import { resizeButtons, shapes } from "../../utilities/data";
+import { shapes } from "../../utilities/data";
 
 //styles
 import "./canvas.css";
 import { Position } from "../../interfaces/position";
+import ShapePanel from "../shapePanel/ShapePanel";
+import { Dimension } from "../../interfaces/dimension";
 
 const Canvas = ({
-  width,
-  height,
+  parentSize,
   currentTool,
   currentColor,
   canvasPosition,
   lineWidth,
+  setSelected,
 }: {
-  width: number;
-  height: number;
+  parentSize: Dimension;
   currentTool: CurrentTool;
   currentColor: string;
   canvasPosition: Position;
   lineWidth: number;
+  setSelected: Dispatch<SetStateAction<boolean>>;
 }) => {
   //refs
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const buttons = useRef<HTMLDivElement>(null);
+  const mainCanvas = useRef<HTMLCanvasElement>(null);
   const auxCanvas = useRef<HTMLCanvasElement>(null);
-  const ctxAux = auxCanvas.current?.getContext("2d");
-  //useState
+  const canvasContainer = useRef<HTMLDivElement>(null);
 
+  //useState
   const [XY, setXY] = useState<Point>({ x: 0, y: 0 });
   const [shapePath, setShapePath] = useState<Path2D>();
   const [lassoPath, setLassoPath] = useState<Point[]>([]);
   const [isDrawing, setIsDrawing] = useState<boolean>(false);
   const [lassoPoints, setLassoPoints] = useState<Point[]>([]);
-  const [ctx, setContext] = useState<CanvasRenderingContext2D>();
+  const [mainCtx, setContext] = useState<CanvasRenderingContext2D>();
+  const [auxCtx, setAuxCtx] = useState<CanvasRenderingContext2D>();
   const [pngImage, setPngImage] = useState<HTMLImageElement>(new Image());
-  // const [isPngImage, setIsPngImage] = useState<boolean | undefined>(false);
   const [imageData, setImageData] = useState<ImageData | undefined>(undefined);
   const [resizeButtonId, setResizeButtonId] = useState<number>(0);
 
@@ -79,22 +88,184 @@ const Canvas = ({
     maxY: 0,
   });
 
-  const buttons = useRef<HTMLDivElement>(null);
-  const canvasContainer = useRef<HTMLDivElement>(null);
-  const [cursorState, setCursorState] = useState<
+  const [pointerState, setPointerState] = useState<
     "onShapeContainer" | "onResizeButton" | "onCanvas"
   >();
 
   useEffect(() => {
-    if (canvasRef.current) {
-      const ctx = canvasRef.current.getContext("2d", {
-        willReadFrequently: true,
-      });
-      if (ctx) {
-        setContext(ctx);
-      }
-    }
+    if (!mainCanvas.current) return;
+    const mainCtx = mainCanvas.current.getContext("2d", {
+      willReadFrequently: true,
+    });
+    if (!mainCtx) return;
+    mainCtx.lineCap = "round";
+    setContext(mainCtx);
+  }, [mainCtx]);
+
+  useEffect(() => {
+    if (!auxCanvas.current) return;
+    const auxCtx = auxCanvas.current.getContext("2d", {
+      willReadFrequently: true,
+    });
+    if (!auxCtx) return;
+    setAuxCtx(auxCtx);
   }, []);
+
+  ///events
+  const handleMouseDown = (event: React.MouseEvent) => {
+    setIsDrawing(true);
+
+    setMouseDownPosition({
+      x: event.clientX - canvasPosition.left,
+      y: event.clientY - canvasPosition.top,
+    });
+
+    switch (event.target) {
+      case mainCanvas.current:
+        resetShapeContainerProps();
+        setPointerState("onCanvas");
+        setSelected(false);
+        setCanvasOptions();
+        performAction({ x: event.clientX, y: event.clientY });
+        break;
+      case buttons.current:
+        setPointerState("onShapeContainer");
+        setXY({
+          x: event.clientX - shapeContainer.left - canvasPosition.left,
+          y: event.clientY - shapeContainer.top - canvasPosition.top,
+        });
+
+        if (currentTool.toolGroupID === 2 && !imageData) {
+          setSelection("white");
+          clearCanvasArea();
+        }
+
+        if (currentTool.toolGroupID === 10 && !imageData) {
+          setSelection("transparent");
+          setLassoImage();
+          clearLassoSelection();
+        }
+
+        if (currentTool.toolGroupID === 5 && !imageData) {
+          setIrregularShape();
+        }
+        break;
+      default:
+        setPointerState("onResizeButton");
+
+        // if (currentTool.toolGroupID === 5 && !imageData) {
+        //   setIrregularShape();
+        // }
+        setMouseDownPosition({ x: event.clientX, y: event.clientY });
+        break;
+    }
+  };
+
+  const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
+    const point: Point = {
+      x: event.clientX,
+      y: event.clientY,
+    };
+    // substract left value of canvas container (toolbar and possibly a menu on top)
+    const precisePoint: Point = {
+      x: point.x - canvasPosition.left,
+      y: point.y - canvasPosition.top,
+    };
+
+    setMouseMovePosition(precisePoint);
+
+    switch (pointerState) {
+      case "onCanvas":
+        setAction();
+        break;
+
+      case "onShapeContainer":
+        moveShapeContainer(precisePoint);
+        break;
+
+      case "onResizeButton":
+        setResizeValues(point);
+        break;
+
+      default:
+        break;
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsDrawing(false);
+    if (!(shapeContainer.width && shapeContainer.height)) {
+      if (imageData) return;
+      if (lassoPoints.length <= 0) return;
+      setLassoValues();
+      setLassoPath(lassoPoints);
+    } else {
+      if (currentTool.toolGroupID === 2) {
+        setResizedImageValues();
+      }
+      resetShapeContainerReferenceProps();
+    }
+  };
+
+  const setCanvasOptions = () => {
+    if (!auxCanvas.current) return;
+    auxCanvas.current.style.backgroundColor = "transparent";
+
+    if (mainCtx) {
+      mainCtx.strokeStyle = currentColor;
+      mainCtx.fillStyle = currentColor;
+      shapeContainer.background = currentColor;
+      mainCtx.lineWidth = lineWidth;
+    }
+  };
+  ///
+  const performAction = (point: Point) => {
+    switch (currentTool.toolGroupID) {
+      case 1:
+        paintShape();
+        resetAuxCanvasDimension();
+        setPath(currentTool.toolId);
+        break;
+
+      case 2:
+        resetSelection();
+        drawImage();
+        auxCtx?.clearRect(0, 0, 300, 150);
+        break;
+
+      case 5:
+        resetFreeFormShape();
+        drawLassoImage();
+        setLassoPoints([]);
+        setBounding({
+          maxX: 0,
+          maxY: 0,
+          minX: point.x,
+          minY: point.y,
+        });
+        break;
+
+      case 10:
+        drawLassoImage();
+        resetSelection();
+        setResizedImage(undefined);
+        setPath(-1);
+        setLassoPoints([]);
+        /* set an initial value to start comparing in setMinMaxXY function,
+      in order to get box dimensions of shapeContainer */
+        setBounding({
+          maxX: 0,
+          maxY: 0,
+          minX: point.x,
+          minY: point.y,
+        });
+        break;
+
+      default:
+        break;
+    }
+  };
+  ///
 
   const paintShape = () => {
     switch (shapeContainer.componentClass) {
@@ -132,11 +303,11 @@ const Canvas = ({
   };
 
   const drawLine = (): void => {
-    if (ctx) {
-      ctx.beginPath();
-      ctx.moveTo(positionDown.x, positionDown.y);
-      ctx.lineTo(positionMove.x, positionMove.y);
-      ctx.stroke();
+    if (mainCtx) {
+      mainCtx.beginPath();
+      mainCtx.moveTo(positionDown.x, positionDown.y);
+      mainCtx.lineTo(positionMove.x, positionMove.y);
+      mainCtx.stroke();
       positionDown.x = positionMove.x;
       positionDown.y = positionMove.y;
       setLassoPoints((prev) => [...prev, positionMove]);
@@ -144,8 +315,8 @@ const Canvas = ({
   };
 
   const drawRectangle = () => {
-    if (ctx) {
-      ctx.fillRect(
+    if (mainCtx) {
+      mainCtx.fillRect(
         shapeContainer.left,
         shapeContainer.top,
         shapeContainer.width,
@@ -155,7 +326,7 @@ const Canvas = ({
   };
 
   const drawTriangle = () => {
-    if (ctx) {
+    if (mainCtx) {
       const polygonCoords: Point[] = [
         {
           x: shapeContainer.left + shapeContainer.width * 0.5,
@@ -171,23 +342,23 @@ const Canvas = ({
         },
       ];
 
-      ctx.beginPath();
-      ctx.moveTo(polygonCoords[0].x, polygonCoords[0].y);
+      mainCtx.beginPath();
+      mainCtx.moveTo(polygonCoords[0].x, polygonCoords[0].y);
 
       for (let i = 0; i < polygonCoords.length; i++) {
-        ctx.lineTo(polygonCoords[i].x, polygonCoords[i].y);
+        mainCtx.lineTo(polygonCoords[i].x, polygonCoords[i].y);
       }
-      ctx.closePath();
-      ctx.fill();
+      mainCtx.closePath();
+      mainCtx.fill();
     }
   };
 
   const drawEllipse = () => {
     const { width, height, top, left } = shapeContainer;
     const endAngle = Math.PI * 2;
-    if (ctx) {
-      ctx.beginPath();
-      ctx.ellipse(
+    if (mainCtx) {
+      mainCtx.beginPath();
+      mainCtx.ellipse(
         left + width * 0.5,
         top + height * 0.5,
         Math.abs(width) * 0.5,
@@ -196,13 +367,13 @@ const Canvas = ({
         0,
         endAngle
       );
-      ctx.fill();
+      mainCtx.fill();
     }
   };
 
   const drawPentagon = () => {
     const { width, height, top, left } = shapeContainer;
-    if (ctx) {
+    if (mainCtx) {
       const polygonCoords: Point[] = [
         { x: left + width * 0.5, y: top },
         { x: left, y: top + height * 0.38 },
@@ -211,14 +382,14 @@ const Canvas = ({
         { x: left + width, y: top + height * 0.38 },
       ];
 
-      ctx.beginPath();
-      ctx.moveTo(polygonCoords[0].x, polygonCoords[0].y);
+      mainCtx.beginPath();
+      mainCtx.moveTo(polygonCoords[0].x, polygonCoords[0].y);
 
       for (let i = 0; i < polygonCoords.length; i++) {
-        ctx.lineTo(polygonCoords[i].x, polygonCoords[i].y);
+        mainCtx.lineTo(polygonCoords[i].x, polygonCoords[i].y);
       }
-      ctx.closePath();
-      ctx.fill();
+      mainCtx.closePath();
+      mainCtx.fill();
     }
   };
 
@@ -228,7 +399,7 @@ const Canvas = ({
       according to the width and height of aux component:
       width * 0.25 = 25% of aux component height 
       */
-    if (ctx) {
+    if (mainCtx) {
       const polygonCoords: Point[] = [
         { x: left + width * 0.25, y: top },
         { x: left, y: top + height * 0.5 },
@@ -238,21 +409,21 @@ const Canvas = ({
         { x: left + width * 0.75, y: top },
       ];
 
-      ctx.beginPath();
-      ctx.moveTo(polygonCoords[0].x, polygonCoords[0].y);
+      mainCtx.beginPath();
+      mainCtx.moveTo(polygonCoords[0].x, polygonCoords[0].y);
 
       for (let i = 0; i < polygonCoords.length; i++) {
-        ctx.lineTo(polygonCoords[i].x, polygonCoords[i].y);
+        mainCtx.lineTo(polygonCoords[i].x, polygonCoords[i].y);
       }
-      ctx.closePath();
-      ctx.fill();
+      mainCtx.closePath();
+      mainCtx.fill();
     }
   };
 
   const drawStar = () => {
     const { width, height, top, left } = shapeContainer;
 
-    if (ctx) {
+    if (mainCtx) {
       const polygonCoords: Point[] = [
         { x: left + width * 0.5, y: top },
         { x: left + width * 0.37, y: top + height * 0.38 },
@@ -266,20 +437,20 @@ const Canvas = ({
         { x: left + width * 0.63, y: top + height * 0.38 },
       ];
 
-      ctx.beginPath();
-      ctx.moveTo(polygonCoords[0].x, polygonCoords[0].y);
+      mainCtx.beginPath();
+      mainCtx.moveTo(polygonCoords[0].x, polygonCoords[0].y);
 
       for (let i = 0; i < polygonCoords.length; i++) {
-        ctx.lineTo(polygonCoords[i].x, polygonCoords[i].y);
+        mainCtx.lineTo(polygonCoords[i].x, polygonCoords[i].y);
       }
-      ctx.closePath();
-      ctx.fill();
+      mainCtx.closePath();
+      mainCtx.fill();
     }
   };
 
   const drawRhombus = () => {
     const { width, height, top, left } = shapeContainer;
-    if (ctx) {
+    if (mainCtx) {
       const polygonCoords: Point[] = [
         { x: left + width * 0.5, y: top },
         { x: left, y: top + height * 0.5 },
@@ -287,14 +458,14 @@ const Canvas = ({
         { x: left + width, y: top + height * 0.5 },
       ];
 
-      ctx.beginPath();
-      ctx.moveTo(polygonCoords[0].x, polygonCoords[0].y);
+      mainCtx.beginPath();
+      mainCtx.moveTo(polygonCoords[0].x, polygonCoords[0].y);
 
       for (let i = 0; i < polygonCoords.length; i++) {
-        ctx.lineTo(polygonCoords[i].x, polygonCoords[i].y);
+        mainCtx.lineTo(polygonCoords[i].x, polygonCoords[i].y);
       }
-      ctx.closePath();
-      ctx.fill();
+      mainCtx.closePath();
+      mainCtx.fill();
     }
   };
 
@@ -315,14 +486,14 @@ const Canvas = ({
   };
 
   const setPath = (id: number) => {
-    if (!ctxAux) return;
+    if (!auxCtx) return;
     if (id < 0) {
-      ctxAux.clearRect(0, 0, 300, 150);
+      auxCtx.clearRect(0, 0, 300, 150);
     } else {
       const path = new Path2D(shapes[id - 1].path);
-      ctxAux.fillStyle = shapeContainer.background;
-      ctxAux.clearRect(0, 0, 300, 150);
-      ctxAux.fill(path);
+      auxCtx.fillStyle = shapeContainer.background;
+      auxCtx.clearRect(0, 0, 300, 150);
+      auxCtx.fill(path);
     }
   };
 
@@ -385,112 +556,15 @@ const Canvas = ({
   };
 
   const erase = () => {
-    if (ctx) {
-      ctx.clearRect(positionMove.x, positionMove.y, 20, 20);
+    if (mainCtx) {
+      mainCtx.clearRect(positionMove.x, positionMove.y, lineWidth, lineWidth);
     }
   };
 
-  //MAIN CONTAINER
-  const handleMainContainerMouseDown = (event: React.MouseEvent) => {
-    setIsDrawing(true);
-
-    setMouseDownPosition({
-      x: event.clientX - canvasPosition.left,
-      y: event.clientY - canvasPosition.top,
-    });
-
-    if (event.target === canvasRef.current) {
-      resetShapeContainerProps();
-      setCursorState("onCanvas");
-      if (!auxCanvas.current) return; //inside canvas area
-      auxCanvas.current.style.backgroundColor = "transparent";
-
-      if (ctx) {
-        ctx.strokeStyle = currentColor;
-        ctx.fillStyle = currentColor;
-        shapeContainer.background = currentColor;
-        ctx.lineWidth = lineWidth;
-        ctx.lineCap = "round";
-      }
-
-      switch (currentTool.toolGroupID) {
-        case 1:
-          paintShape();
-          resetAuxCanvasDimension();
-          setPath(currentTool.toolId);
-          break;
-
-        case 2:
-          resetSelection();
-          drawImage();
-          ctxAux?.clearRect(0, 0, 300, 150);
-          break;
-
-        case 5:
-          resetFreeFormShape();
-          drawLassoImage();
-          setLassoPoints([]);
-          setBounding({ minX: 0, minY: 0, maxX: 0, maxY: 0 });
-          setBounding((prev) => ({
-            ...prev,
-            minX: event.clientX,
-            minY: event.clientY,
-          }));
-          break;
-
-        case 10:
-          drawLassoImage();
-          resetSelection();
-          setResizedImage(undefined);
-          setPath(-1);
-          setLassoPoints([]);
-          /* set an initial value to start comparing in setMinMaxXY function,
-          in order to get box dimensions of shapeContainer */
-          setBounding({ minX: 0, minY: 0, maxX: 0, maxY: 0 });
-          setBounding((prev) => ({
-            ...prev,
-            minX: event.clientX,
-            minY: event.clientY,
-          }));
-          break;
-
-        default:
-          break;
-      }
-    } else if (event.target === buttons.current) {
-      setCursorState("onShapeContainer");
-      setXY({
-        x: event.clientX - shapeContainer.left - canvasPosition.left,
-        y: event.clientY - shapeContainer.top - canvasPosition.top,
-      });
-
-      if (currentTool.toolGroupID === 2 && !imageData) {
-        setSelection("white");
-        clearCanvasArea();
-      }
-
-      if (currentTool.toolGroupID === 10 && !imageData) {
-        setSelection("transparent");
-        setLassoImage();
-        clearLassoSelection();
-      }
-
-      if (currentTool.toolGroupID === 5 && !imageData) {
-        setIrregularShape();
-      }
-    } else {
-      setCursorState("onResizeButton");
-
-      // if (currentTool.toolGroupID === 5 && !imageData) {
-      //   setIrregularShape();
-      // }
-      setMouseDownPosition({ x: event.clientX, y: event.clientY });
-    }
-  };
-
+  // canvas functions
   const drawLassoImage = () => {
     const { left, top, width, height } = shapeContainer;
-    ctx?.drawImage(pngImage, left, top, width, height);
+    mainCtx?.drawImage(pngImage, left, top, width, height);
   };
 
   const resetAuxCanvasDimension = () => {
@@ -503,7 +577,7 @@ const Canvas = ({
   const resetSelection = () => {
     const { width, height } = shapeContainer;
 
-    ctxAux?.clearRect(0, 0, width, height);
+    auxCtx?.clearRect(0, 0, width, height);
     setImageData(undefined);
     setResizedImage(undefined);
     if (!auxCanvas.current) return;
@@ -512,10 +586,10 @@ const Canvas = ({
 
   const resetFreeFormShape = () => {
     const { width, height } = shapeContainer;
-    if (!ctxAux) return;
-    ctxAux.clearRect(0, 0, width, height);
+    if (!auxCtx) return;
+    auxCtx.clearRect(0, 0, width, height);
     setImageData(undefined);
-    ctxAux.fillStyle = currentColor;
+    auxCtx.fillStyle = currentColor;
     if (!auxCanvas.current) return;
 
     auxCanvas.current.style.backgroundColor = "transparent";
@@ -523,43 +597,43 @@ const Canvas = ({
 
   const drawImage = () => {
     const { left, top, width, height } = shapeContainer;
-    if (!ctx) return;
+    if (!mainCtx) return;
     if (imageData && resizedImage) {
-      ctx.fillStyle = "white"; //only if selection style is not transparent
-      ctx.fillRect(left, top, width, height);
-      ctx.drawImage(resizedImage, left, top, width, height);
+      mainCtx.fillStyle = "white"; //only if selection style is not transparent
+      mainCtx.fillRect(left, top, width, height);
+      mainCtx.drawImage(resizedImage, left, top, width, height);
     } else if (imageData && !resizedImage) {
-      ctx?.putImageData(imageData, left, top);
+      mainCtx?.putImageData(imageData, left, top);
     }
   };
 
   const setSelection = (background: string) => {
     const { left, top, width, height } = shapeContainer;
     if (!(width > 0 && height > 0)) return;
-    const image = ctx?.getImageData(left, top, width, height);
+    const image = mainCtx?.getImageData(left, top, width, height);
     if (!image) return;
     if (!auxCanvas.current) return;
     auxCanvas.current.width = image.width;
     auxCanvas.current.height = image.height;
-    ctxAux?.putImageData(image, 0, 0);
+    auxCtx?.putImageData(image, 0, 0);
     auxCanvas.current.style.backgroundColor = background;
     setImageData(image);
   };
 
   const clearCanvasArea = () => {
     const { left, top, width, height } = shapeContainer;
-    if (!ctx) return;
-    ctx.clearRect(left, top, width, height);
+    if (!mainCtx) return;
+    mainCtx.clearRect(left, top, width, height);
   };
 
   const clearLassoSelection = () => {
     const { left, top } = shapeContainer;
-    if (!shapePath || !pngImage || !ctx) return;
+    if (!shapePath || !pngImage || !mainCtx) return;
     pngImage.onload = () => {
-      ctx.translate(left, top);
-      ctx.fillStyle = "white";
-      ctx.fill(shapePath);
-      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      mainCtx.translate(left, top);
+      mainCtx.fillStyle = "white";
+      mainCtx.fill(shapePath);
+      mainCtx.setTransform(1, 0, 0, 1, 0, 0);
     };
   };
 
@@ -569,7 +643,7 @@ const Canvas = ({
     ///
     setImageData(new ImageData(300, 150));
     //
-    if (!ctxAux || !auxCanvas.current || !shapePath) return;
+    if (!auxCtx || !auxCanvas.current || !shapePath) return;
     auxCanvas.current.width = width;
     auxCanvas.current.height = height;
 
@@ -577,77 +651,42 @@ const Canvas = ({
       shapePath.lineTo(lassoPath[i].x - left, lassoPath[i].y - top);
 
     shapePath.closePath();
-    ctxAux.clip(shapePath);
-    ctxAux.fillStyle = currentColor;
-    ctxAux.fill(shapePath);
+    auxCtx.clip(shapePath);
+    auxCtx.fillStyle = currentColor;
+    auxCtx.fill(shapePath);
     auxCanvas.current.style.backgroundColor = "transparent";
     const base64 = auxCanvas.current.toDataURL();
     pngImage.src = base64;
   };
-  //
-  //this needs an imagedata of shapeContainer
-  //
+
   const setLassoImage = () => {
     const { left, top, width, height } = shapeContainer;
     const img = new Image();
     if (!auxCanvas.current) return;
     img.src = auxCanvas.current.toDataURL();
     img.onload = () => {
-      ctxAux?.clearRect(0, 0, width, height);
+      auxCtx?.clearRect(0, 0, width, height);
       setShapePath(new Path2D());
-      if (!shapePath || !ctxAux || !auxCanvas.current) return;
+      if (!shapePath || !auxCtx || !auxCanvas.current) return;
 
       for (let i = 0; i < lassoPath.length; i++)
         shapePath.lineTo(lassoPath[i].x - left, lassoPath[i].y - top);
 
       shapePath.closePath();
-      ctxAux.clip(shapePath);
-      ctxAux.drawImage(img, 0, 0);
+      auxCtx.clip(shapePath);
+      auxCtx.drawImage(img, 0, 0);
       const base64 = auxCanvas.current.toDataURL();
       pngImage.src = base64;
-      ctxAux.drawImage(pngImage, 0, 0);
+      auxCtx.drawImage(pngImage, 0, 0);
     };
   };
 
   const setResizedImageValues = () => {
     if (!auxCanvas.current) return;
-    if (cursorState !== "onResizeButton") return;
+    if (pointerState !== "onResizeButton") return;
     const img = new Image();
     img.src = auxCanvas.current.toDataURL();
     setResizedImage(img);
-  };
-
-  const handleMainContainerMouseMove = (
-    event: React.MouseEvent<HTMLDivElement>
-  ) => {
-    const point: Point = {
-      x: event.clientX,
-      y: event.clientY,
-    };
-    // substract left value of canvas container (toolbar and possibly a menu on top)
-    const precisePoint: Point = {
-      x: point.x - canvasPosition.left,
-      y: point.y - canvasPosition.top,
-    };
-
-    setMouseMovePosition(precisePoint);
-
-    switch (cursorState) {
-      case "onCanvas":
-        setAction();
-        break;
-
-      case "onShapeContainer":
-        moveShapeContainer(precisePoint);
-        break;
-
-      case "onResizeButton":
-        setResizeValues(point);
-        break;
-
-      default:
-        break;
-    }
   };
 
   ///// cuando cambio de color no se quita el ultimo path en el drawFreeFormShape
@@ -677,7 +716,7 @@ const Canvas = ({
     drawLine();
     setMinMaxXY();
   };
-  // set bounding of shapeContainer after drawing
+
   const setMinMaxXY = () => {
     if (positionMove.x < bounding.minX) {
       setBounding((prev) => ({ ...prev, minX: positionMove.x }));
@@ -690,21 +729,6 @@ const Canvas = ({
     }
     if (positionMove.y > bounding.maxY) {
       setBounding((prev) => ({ ...prev, maxY: positionMove.y }));
-    }
-  };
-
-  const handleMainContainerMouseUp = () => {
-    setIsDrawing(false);
-    if (!(shapeContainer.width && shapeContainer.height)) {
-      if (imageData) return;
-      if (lassoPoints.length <= 0) return;
-      setLassoValues();
-      setLassoPath(lassoPoints);
-    } else {
-      if (currentTool.toolGroupID === 2) {
-        setResizedImageValues();
-      }
-      resetShapeContainerReferenceProps();
     }
   };
 
@@ -926,10 +950,6 @@ const Canvas = ({
     }
   };
 
-  const handleButtonMouseDown = (buttonId: number) => {
-    setResizeButtonId(buttonId);
-  };
-
   const moveShapeContainer = (point: Point) => {
     if (!isDrawing) return;
     setShapeContainer((s) => ({
@@ -954,43 +974,23 @@ const Canvas = ({
   return (
     <div
       className="canvas-container"
-      onPointerDown={handleMainContainerMouseDown}
-      onPointerMove={handleMainContainerMouseMove}
-      onPointerUp={handleMainContainerMouseUp}
+      onPointerDown={handleMouseDown}
+      onPointerMove={handleMouseMove}
+      onPointerUp={handleMouseUp}
       ref={canvasContainer}
     >
-      <div
-        className="canvas-buttons"
-        style={{
-          left: shapeContainer.left,
-          top: shapeContainer.top,
-          width: shapeContainer.width,
-          height: shapeContainer.height,
-          outline: "1px dashed gray",
-          boxShadow: "0px 0px 0px 1px white",
-        }}
-      >
-        <div className="btn-container">
-          <canvas className="shape-container" ref={auxCanvas}></canvas>
-          {!isDrawing && (
-            <div className="buttons" ref={buttons}>
-              {resizeButtons.map((button) => (
-                <button
-                  key={button.id}
-                  className={button.class}
-                  onPointerDown={() => handleButtonMouseDown(button.id)}
-                ></button>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
+      <ShapePanel
+        shapeContainer={shapeContainer}
+        canvasRef={auxCanvas}
+        buttonsRef={buttons}
+        setResizeButtonId={setResizeButtonId}
+      />
 
       <canvas
-        ref={canvasRef}
-        height={height}
-        width={width}
         className="canvas"
+        ref={mainCanvas}
+        width={parentSize.width}
+        height={parentSize.height}
       ></canvas>
     </div>
   );

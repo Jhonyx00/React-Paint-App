@@ -15,14 +15,20 @@ import "./App.css";
 import { Position } from "./interfaces/position.ts";
 import { shapeItems, toolsItems, selectItems } from "./utilities/data.ts";
 import { Point } from "./interfaces/point.ts";
+import Menu from "./components/menu/Menu.tsx";
 
 const App = () => {
   const canvasContainer = useRef<HTMLDivElement>(null);
   const [currentColor, setCurrentColor] = useState<string>("");
-  const canvasPosition: Position = {
-    left: canvasContainer.current?.getBoundingClientRect().left!,
-    top: canvasContainer.current?.getBoundingClientRect().top!,
-  };
+  // const canvasPosition: Position = {
+  //   left: canvasContainer.current?.getBoundingClientRect().left!,
+  //   top: canvasContainer.current?.getBoundingClientRect().top!,
+  // };
+
+  const [canvasPosition, setCanvasPosition] = useState<Position>({
+    left: 0,
+    top: 0,
+  });
 
   const [parentSize, setParentSize] = useState<Dimension>({
     width: 0,
@@ -46,6 +52,11 @@ const App = () => {
         width: canvasContainer.current.clientWidth,
         height: canvasContainer.current.clientHeight,
       });
+
+      setCanvasPosition({
+        left: canvasContainer.current.getBoundingClientRect().left,
+        top: canvasContainer.current.getBoundingClientRect().top,
+      });
     }
     const handleWheel = (event: WheelEvent) => {
       if (event.ctrlKey) {
@@ -67,9 +78,8 @@ const App = () => {
   };
 
   const [lineWidth, setLineWidth] = useState<number>(1);
-
+  const [selected, setSelected] = useState<boolean>(false);
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    console.log(e.target.value);
     const value = e.target.value;
     setLineWidth(parseInt(value));
   };
@@ -81,16 +91,19 @@ const App = () => {
           toolGroupName={"Shapes"}
           toolItems={shapeItems}
           setCurrentTool={setCurrentTool}
+          setSelected={setSelected}
         />
         <Tool
           toolGroupName={"Tools"}
           toolItems={toolsItems}
           setCurrentTool={setCurrentTool}
+          setSelected={setSelected}
         />
         <Tool
           toolGroupName={"Select"}
           toolItems={selectItems}
           setCurrentTool={setCurrentTool}
+          setSelected={setSelected}
         />
         <ColorPalette setCurrentColor={setCurrentColor} />
 
@@ -115,13 +128,15 @@ const App = () => {
           className="canvas-main-container"
           onMouseMove={handleMouseMove}
         >
+          {selected && <Menu />}
+
           <Canvas
+            parentSize={parentSize}
             currentTool={currentTool}
             currentColor={currentColor}
-            width={parentSize.width}
-            height={parentSize.height}
             canvasPosition={canvasPosition}
             lineWidth={lineWidth}
+            setSelected={setSelected}
           ></Canvas>
         </div>
 

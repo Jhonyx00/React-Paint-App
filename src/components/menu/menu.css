@@ -1,0 +1,36 @@
+.menu {
+  position: absolute;
+  left: 130px;
+  margin: 5px;
+  z-index: 3;
+  background-color: rgba(255, 255, 255, 0.8);
+  border: 2px solid lightgray;
+  backdrop-filter: blur(1em);
+  cursor: default;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  width: 10em;
+  height: 12em;
+  span {
+    padding: 10px;
+    font-weight: 500;
+    color: gray;
+  }
+  div.list {
+    background-color: rgba(255, 255, 255, 0.539);
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    place-items: center;
+
+    gap: 5px;
+    padding: 5px;
+    button {
+      cursor: pointer;
+      width: 2em;
+      height: 2em;
+      border-radius: 0.4em;
+    }
+  }
+}
