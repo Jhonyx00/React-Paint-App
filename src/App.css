@@ -59,11 +59,12 @@
     }
     .size {
       display: grid;
-      grid-template-columns: 80% 20%;
+      grid-template-columns: 70% 30%;
       place-items: center;
 
       input {
         width: 100%;
+        cursor: pointer;
       }
     }
   }
