@@ -26,6 +26,7 @@ const Canvas = ({
   currentColor,
   canvasPosition,
   lineWidth,
+  lineOpacity,
   setSelected,
 }: {
   parentSize: Dimension;
@@ -33,6 +34,7 @@ const Canvas = ({
   currentColor: string;
   canvasPosition: Position;
   lineWidth: number;
+  lineOpacity: number;
   setSelected: Dispatch<SetStateAction<boolean>>;
 }) => {
   //refs
@@ -216,6 +218,9 @@ const Canvas = ({
       mainCtx.fillStyle = currentColor;
       shapeContainer.background = currentColor;
       mainCtx.lineWidth = lineWidth;
+      mainCtx.globalAlpha = 1;
+      if (currentTool.toolGroupID !== 3) return;
+      mainCtx.globalAlpha = lineOpacity;
     }
   };
   ///

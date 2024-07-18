@@ -78,10 +78,17 @@ const App = () => {
   };
 
   const [lineWidth, setLineWidth] = useState<number>(1);
+  const [lineOpacity, setLineOpacity] = useState<number>(100);
+
   const [selected, setSelected] = useState<boolean>(false);
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleWidthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setLineWidth(parseInt(value));
+  };
+
+  const handleOpaictyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setLineOpacity(parseInt(value));
   };
 
   return (
@@ -108,16 +115,26 @@ const App = () => {
         <ColorPalette setCurrentColor={setCurrentColor} />
 
         <div className="lineWidth">
-          <span>Size</span>
+          <span>Brush Control</span>
           <div className="size">
             <input
               type="range"
               min={1}
               max={100}
-              onChange={handleChange}
+              onChange={handleWidthChange}
               value={lineWidth}
             />
             <span>{lineWidth}</span>
+          </div>
+          <div className="size">
+            <input
+              type="range"
+              min={1}
+              max={100}
+              onChange={handleOpaictyChange}
+              value={lineOpacity}
+            />
+            <span>{lineOpacity}%</span>
           </div>
         </div>
       </div>
@@ -136,6 +153,7 @@ const App = () => {
             currentColor={currentColor}
             canvasPosition={canvasPosition}
             lineWidth={lineWidth}
+            lineOpacity={lineOpacity / 100}
             setSelected={setSelected}
           ></Canvas>
         </div>
