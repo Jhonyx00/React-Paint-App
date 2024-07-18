@@ -117,13 +117,12 @@ const Canvas = ({
   const handleMouseDown = (event: React.MouseEvent) => {
     setIsDrawing(true);
 
-    setMouseDownPosition({
-      x: event.clientX - canvasPosition.left,
-      y: event.clientY - canvasPosition.top,
-    });
-
     switch (event.target) {
       case mainCanvas.current:
+        setMouseDownPosition({
+          x: event.clientX - canvasPosition.left,
+          y: event.clientY - canvasPosition.top,
+        });
         resetShapeContainerProps();
         setPointerState("onCanvas");
         setSelected(false);
@@ -160,6 +159,16 @@ const Canvas = ({
           setSelection("white");
           clearCanvasArea();
         }
+        //para que agarre el trozo de imagen al comenzar a redomensionar
+        if (currentTool.toolGroupID === 10 && !imageData) {
+          setSelection("transparent");
+          setLassoImage();
+          clearLassoSelection();
+        }
+
+        if (currentTool.toolGroupID === 5 && !imageData) {
+          setIrregularShape();
+        }
 
         break;
     }
@@ -177,6 +186,8 @@ const Canvas = ({
     };
 
     setMouseMovePosition(precisePoint);
+
+    if (!isDrawing) return;
 
     switch (pointerState) {
       case "onCanvas":
@@ -198,16 +209,26 @@ const Canvas = ({
 
   const handleMouseUp = () => {
     setIsDrawing(false);
-    if (!(shapeContainer.width && shapeContainer.height)) {
-      if (imageData) return;
-      if (lassoPoints.length <= 0) return;
-      setLassoValues();
-      setLassoPath(lassoPoints);
-    } else {
-      if (currentTool.toolGroupID === 2) {
+
+    switch (currentTool.toolGroupID) {
+      case 1:
+        resetShapeContainerReferenceProps();
+        break;
+
+      case 2:
         setResizedImageValues();
-      }
-      resetShapeContainerReferenceProps();
+        resetShapeContainerReferenceProps();
+        break;
+
+      case 5:
+      case 10:
+        setLassoValues();
+        setLassoPath(lassoPoints);
+        resetShapeContainerReferenceProps();
+        break;
+
+      default:
+        break;
     }
   };
 
@@ -274,6 +295,7 @@ const Canvas = ({
   ///
 
   const paintShape = () => {
+    // mainCtx!.fillStyle = "blue";
     switch (shapeContainer.componentClass) {
       case "Rectangle":
         drawRectangle();
@@ -570,7 +592,9 @@ const Canvas = ({
   // canvas functions
   const drawLassoImage = () => {
     const { left, top, width, height } = shapeContainer;
-    mainCtx?.drawImage(pngImage, left, top, width, height);
+    if (!mainCtx) return;
+    if (!imageData) return;
+    mainCtx.drawImage(pngImage, left, top, width, height);
   };
 
   const resetAuxCanvasDimension = () => {
@@ -583,20 +607,18 @@ const Canvas = ({
   const resetSelection = () => {
     setImageData(undefined);
     setResizedImage(undefined);
-
+    if (!auxCtx) return;
     if (!auxCanvas.current) return;
-    auxCtx?.clearRect(0, 0, auxCanvas.current.width, auxCanvas.current.height);
+    auxCtx.clearRect(0, 0, auxCanvas.current.width, auxCanvas.current.height);
     auxCanvas.current.style.backgroundColor = "transparent";
   };
 
   const resetFreeFormShape = () => {
-    const { width, height } = shapeContainer;
-    if (!auxCtx) return;
-    auxCtx.clearRect(0, 0, width, height);
     setImageData(undefined);
-    auxCtx.fillStyle = currentColor;
+    if (!auxCtx) return;
     if (!auxCanvas.current) return;
-
+    auxCtx.clearRect(0, 0, auxCanvas.current.width, auxCanvas.current.height);
+    //auxCtx.fillStyle = currentColor;
     auxCanvas.current.style.backgroundColor = "transparent";
   };
 
@@ -608,20 +630,22 @@ const Canvas = ({
       mainCtx.fillRect(left, top, width, height);
       mainCtx.drawImage(resizedImage, left, top, width, height);
     } else if (imageData && !resizedImage) {
-      mainCtx?.putImageData(imageData, left, top);
+      mainCtx.putImageData(imageData, left, top);
     }
   };
 
   const setSelection = (background: string) => {
     const { left, top, width, height } = shapeContainer;
+    if (!mainCtx) return;
     if (!(width > 0 && height > 0)) return;
-    const image = mainCtx?.getImageData(left, top, width, height);
+    const image = mainCtx.getImageData(left, top, width, height);
     if (!image) return;
     if (!auxCanvas.current) return;
     auxCanvas.current.width = image.width;
     auxCanvas.current.height = image.height;
     auxCanvas.current.style.backgroundColor = background;
-    auxCtx?.putImageData(image, 0, 0);
+    if (!auxCtx) return;
+    auxCtx.putImageData(image, 0, 0);
     setImageData(image);
   };
 
@@ -633,10 +657,12 @@ const Canvas = ({
 
   const clearLassoSelection = () => {
     const { left, top } = shapeContainer;
-    if (!shapePath || !pngImage || !mainCtx) return;
+    if (!pngImage) return;
     pngImage.onload = () => {
+      if (!mainCtx) return;
       mainCtx.translate(left, top);
       mainCtx.fillStyle = "white";
+      if (!shapePath) return;
       mainCtx.fill(shapePath);
       mainCtx.setTransform(1, 0, 0, 1, 0, 0);
     };
@@ -648,7 +674,7 @@ const Canvas = ({
     ///
     setImageData(new ImageData(300, 150));
     //
-    if (!auxCtx || !auxCanvas.current || !shapePath) return;
+    if (!auxCanvas.current) return;
     auxCanvas.current.width = width;
     auxCanvas.current.height = height;
 
@@ -656,6 +682,7 @@ const Canvas = ({
       shapePath.lineTo(lassoPath[i].x - left, lassoPath[i].y - top);
 
     shapePath.closePath();
+    if (!auxCtx) return;
     auxCtx.clip(shapePath);
     auxCtx.fillStyle = currentColor;
     auxCtx.fill(shapePath);
@@ -669,10 +696,12 @@ const Canvas = ({
     const img = new Image();
     if (!auxCanvas.current) return;
     img.src = auxCanvas.current.toDataURL();
+
     img.onload = () => {
-      auxCtx?.clearRect(0, 0, width, height);
+      if (!auxCtx) return;
+      auxCtx.clearRect(0, 0, width, height);
       setShapePath(new Path2D());
-      if (!shapePath || !auxCtx || !auxCanvas.current) return;
+      if (!shapePath) return;
 
       for (let i = 0; i < lassoPath.length; i++)
         shapePath.lineTo(lassoPath[i].x - left, lassoPath[i].y - top);
@@ -680,6 +709,8 @@ const Canvas = ({
       shapePath.closePath();
       auxCtx.clip(shapePath);
       auxCtx.drawImage(img, 0, 0);
+
+      if (!auxCanvas.current) return;
       const base64 = auxCanvas.current.toDataURL();
       pngImage.src = base64;
       auxCtx.drawImage(pngImage, 0, 0);
@@ -696,7 +727,6 @@ const Canvas = ({
 
   ///// cuando cambio de color no se quita el ultimo path en el drawFreeFormShape
   const setAction = () => {
-    if (!isDrawing) return;
     switch (currentTool.toolGroupID) {
       case 1:
       case 2:
@@ -738,6 +768,8 @@ const Canvas = ({
   };
 
   const setLassoValues = () => {
+    if (imageData) return;
+    if (lassoPoints.length <= 0) return;
     if (currentTool.toolGroupID === 10) {
       setLassoFrame("Lasso");
     } else if (currentTool.toolGroupID === 5) {
@@ -760,7 +792,6 @@ const Canvas = ({
   };
 
   const setResizeValues = (point: Point) => {
-    if (!isDrawing) return;
     //calculate value from mousedown to offset
     const dX = point.x - positionDown.x;
     const dY = point.y - positionDown.y;
@@ -956,7 +987,6 @@ const Canvas = ({
   };
 
   const moveShapeContainer = (point: Point) => {
-    if (!isDrawing) return;
     setShapeContainer((s) => ({
       ...s,
       top: point.y - XY.y,
@@ -979,7 +1009,7 @@ const Canvas = ({
   return (
     <div
       className="canvas-container"
-      onPointerDown={(e) => handleMouseDown(e)}
+      onPointerDown={handleMouseDown}
       onPointerMove={handleMouseMove}
       onPointerUp={handleMouseUp}
       ref={canvasContainer}
