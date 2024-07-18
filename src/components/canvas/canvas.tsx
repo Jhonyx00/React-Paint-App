@@ -154,11 +154,13 @@ const Canvas = ({
         break;
       default:
         setPointerState("onResizeButton");
-
-        // if (currentTool.toolGroupID === 5 && !imageData) {
-        //   setIrregularShape();
-        // }
         setMouseDownPosition({ x: event.clientX, y: event.clientY });
+
+        if (currentTool.toolGroupID === 2 && !imageData) {
+          setSelection("white");
+          clearCanvasArea();
+        }
+
         break;
     }
   };
@@ -235,7 +237,6 @@ const Canvas = ({
       case 2:
         resetSelection();
         drawImage();
-        auxCtx?.clearRect(0, 0, 300, 150);
         break;
 
       case 5:
@@ -580,12 +581,11 @@ const Canvas = ({
   };
 
   const resetSelection = () => {
-    const { width, height } = shapeContainer;
-
-    auxCtx?.clearRect(0, 0, width, height);
     setImageData(undefined);
     setResizedImage(undefined);
+
     if (!auxCanvas.current) return;
+    auxCtx?.clearRect(0, 0, auxCanvas.current.width, auxCanvas.current.height);
     auxCanvas.current.style.backgroundColor = "transparent";
   };
 
@@ -620,8 +620,8 @@ const Canvas = ({
     if (!auxCanvas.current) return;
     auxCanvas.current.width = image.width;
     auxCanvas.current.height = image.height;
-    auxCtx?.putImageData(image, 0, 0);
     auxCanvas.current.style.backgroundColor = background;
+    auxCtx?.putImageData(image, 0, 0);
     setImageData(image);
   };
 
@@ -979,13 +979,18 @@ const Canvas = ({
   return (
     <div
       className="canvas-container"
-      onPointerDown={handleMouseDown}
+      onPointerDown={(e) => handleMouseDown(e)}
       onPointerMove={handleMouseMove}
       onPointerUp={handleMouseUp}
       ref={canvasContainer}
     >
       <ShapePanel
-        shapeContainer={shapeContainer}
+        shapeContainer={{
+          height: shapeContainer.height,
+          width: shapeContainer.width,
+          left: shapeContainer.left,
+          top: shapeContainer.top,
+        }}
         canvasRef={auxCanvas}
         buttonsRef={buttons}
         setResizeButtonId={setResizeButtonId}

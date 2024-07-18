@@ -8,7 +8,7 @@ const ShapePanel = ({
   buttonsRef,
   setResizeButtonId,
 }: {
-  shapeContainer: ShapeContainer;
+  shapeContainer: Pick<ShapeContainer, "width" | "height" | "left" | "top">;
   canvasRef: RefObject<HTMLCanvasElement>;
   buttonsRef: RefObject<HTMLDivElement>;
   setResizeButtonId: Dispatch<SetStateAction<number>>;
