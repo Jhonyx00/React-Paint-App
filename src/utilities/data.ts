@@ -12,7 +12,7 @@ import pentagon from "../assets/pentagon.svg";
 import rectangle from "../assets/rectangle.svg";
 import select from "../assets/select.svg";
 import LassoSelect from "../assets/free-form-select.svg";
-
+import irregularShape from "../assets/irregularShape.svg";
 //arrays
 export const shapes = [
   { name: "Rectangle", path: "M0 0, L0 150, L300 150, L300 0 Z" },
@@ -52,14 +52,11 @@ export const colors = [
   { id: 5, color: "#f7512b" },
   { id: 6, color: "#008a93" },
   { id: 7, color: "#7b4b59" },
-  { id: 8, color: "#b7ce5a" },
+  { id: 8, color: "#f8e300" },
   { id: 9, color: "#5f89ca" },
   { id: 10, color: "#b070db" },
-  { id: 11, color: "#3b4d1b" },
-  { id: 12, color: "#ccdaf0" },
+  { id: 11, color: "#43d26e" },
   { id: 13, color: "#ffcac0" },
-  { id: 14, color: "#cdeaf0" },
-  { id: 15, color: "#abdaf4" },
 ];
 
 export const toolsItems: IconTool[] = [
@@ -79,7 +76,7 @@ export const toolsItems: IconTool[] = [
     toolGroupID: 5,
     toolId: 3,
     name: "IrregularShape",
-    icon: rectangle,
+    icon: irregularShape,
   },
   {
     toolGroupID: 4,

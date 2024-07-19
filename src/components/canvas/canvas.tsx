@@ -686,7 +686,7 @@ const Canvas = ({
     auxCtx.clip(shapePath);
     auxCtx.fillStyle = currentColor;
     auxCtx.fill(shapePath);
-    auxCanvas.current.style.backgroundColor = "transparent";
+    // auxCanvas.current.style.backgroundColor = "transparent";
     const base64 = auxCanvas.current.toDataURL();
     pngImage.src = base64;
   };

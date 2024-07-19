@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-10 -10 120 120">
     <!-- Pentagon -->
-    <polygon points="50,0 0,38 18,100 82,100 100,38" style="fill:gray;" />
+    <polygon points="50,0 0,38 18,100 82,100 100,38"  style="fill:none;stroke:gray; stroke-width:8"  />
 </svg>
 

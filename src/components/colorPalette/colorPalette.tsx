@@ -23,26 +23,27 @@ const ColorPalette = ({ setCurrentColor }: any): React.JSX.Element => {
     <div className="tool-container">
       <span>Color</span>
 
-      <div className="palette">
-        {colors.map((color) => (
-          <button
-            onClick={() => handleClick(color.color)}
-            key={color.id}
-            className="palette-item"
-            style={{ backgroundColor: color.color }}
-          ></button>
-        ))}
-      </div>
-
-      <div className="color-input-container">
-        <input
-          ref={inputRef}
-          type="color"
-          name="color"
-          id="color-chooser"
-          className="color-chooser"
-          onChange={handleChange}
-        />
+      <div className="tool">
+        <div className="palette">
+          {colors.map((color) => (
+            <button
+              onClick={() => handleClick(color.color)}
+              key={color.id}
+              className="palette-item"
+              style={{ backgroundColor: color.color }}
+            ></button>
+          ))}
+        </div>
+        <div className="color-input-container">
+          <input
+            ref={inputRef}
+            type="color"
+            name="color"
+            id="color-chooser"
+            className="color-chooser"
+            onChange={handleChange}
+          />
+        </div>
       </div>
     </div>
   );
