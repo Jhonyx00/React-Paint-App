@@ -45,7 +45,7 @@ const Canvas = ({
 
   //useState
   const [XY, setXY] = useState<Point>({ x: 0, y: 0 });
-  const [shapePath, setShapePath] = useState<Path2D>();
+  const [shapePath, setShapePath] = useState<Path2D>(new Path2D());
   const [lassoPath, setLassoPath] = useState<Point[]>([]);
   const [isDrawing, setIsDrawing] = useState<boolean>(false);
   const [lassoPoints, setLassoPoints] = useState<Point[]>([]);
@@ -699,9 +699,9 @@ const Canvas = ({
 
     img.onload = () => {
       if (!auxCtx) return;
-      auxCtx.clearRect(0, 0, width, height);
-      setShapePath(new Path2D());
-      if (!shapePath) return;
+      auxCtx.clearRect(0, 0, width, height); //important
+
+      setShapePath(new Path2D()); //reset the path in each selection to erase correctly on canvas
 
       for (let i = 0; i < lassoPath.length; i++)
         shapePath.lineTo(lassoPath[i].x - left, lassoPath[i].y - top);
@@ -725,7 +725,6 @@ const Canvas = ({
     setResizedImage(img);
   };
 
-  ///// cuando cambio de color no se quita el ultimo path en el drawFreeFormShape
   const setAction = () => {
     switch (currentTool.toolGroupID) {
       case 1:
