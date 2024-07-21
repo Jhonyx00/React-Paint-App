@@ -8,6 +8,6 @@ export interface ShapeContainer {
   referenceWidth: number;
   referenceHeight: number;
   background: string;
-  componentClass: string;
+  name: string;
   rotation: number;
 }

@@ -3,12 +3,12 @@ import { ShapeContainer } from "../../interfaces/shapeContainer";
 import { resizeButtons } from "../../utilities/data";
 import "./shapePanel.css";
 const ShapePanel = ({
-  shapeContainer,
+  dimension,
   canvasRef,
   buttonsRef,
   setResizeButtonId,
 }: {
-  shapeContainer: Pick<ShapeContainer, "width" | "height" | "left" | "top">;
+  dimension: Pick<ShapeContainer, "width" | "height" | "left" | "top">;
   canvasRef: RefObject<HTMLCanvasElement>;
   buttonsRef: RefObject<HTMLDivElement>;
   setResizeButtonId: Dispatch<SetStateAction<number>>;
@@ -20,15 +20,15 @@ const ShapePanel = ({
     <div
       className="shape-container"
       style={{
-        left: shapeContainer.left,
-        top: shapeContainer.top,
-        width: shapeContainer.width,
-        height: shapeContainer.height,
+        left: dimension.left,
+        top: dimension.top,
+        width: dimension.width,
+        height: dimension.height,
       }}
     >
       <div className="btn-container">
         <canvas className="aux-canvas" ref={canvasRef}></canvas>
-        {shapeContainer.width > 0 && shapeContainer.height > 0 && (
+        {dimension.width > 0 && dimension.height > 0 && (
           <div className="buttons" ref={buttonsRef}>
             {resizeButtons.map((button) => (
               <button

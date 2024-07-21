@@ -155,7 +155,7 @@ const App = () => {
             lineWidth={lineWidth}
             lineOpacity={lineOpacity / 100}
             setSelected={setSelected}
-          ></Canvas>
+          />
         </div>
 
         <div className="status-bar-container">
