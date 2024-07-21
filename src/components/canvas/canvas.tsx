@@ -26,7 +26,8 @@ const Canvas = ({
   currentColor,
   canvasPosition,
   lineWidth,
-  lineOpacity,
+  opacity,
+  shadowBlur,
   setSelected,
 }: {
   parentSize: Dimension;
@@ -34,7 +35,8 @@ const Canvas = ({
   currentColor: string;
   canvasPosition: Position;
   lineWidth: number;
-  lineOpacity: number;
+  opacity: number;
+  shadowBlur: number;
   setSelected: Dispatch<SetStateAction<boolean>>;
 }) => {
   //refs
@@ -224,10 +226,12 @@ const Canvas = ({
   const setCanvasOptions = () => {
     shapeContainer.background = currentColor;
     if (!mainCtx) return;
-    mainCtx.globalAlpha = lineOpacity;
+    mainCtx.globalAlpha = opacity;
     mainCtx.strokeStyle = currentColor;
     mainCtx.fillStyle = currentColor;
     mainCtx.lineWidth = lineWidth;
+    mainCtx.shadowBlur = shadowBlur;
+    mainCtx.shadowColor = "blue";
   };
 
   const setAuxCanvasOptions = () => {
@@ -235,7 +239,9 @@ const Canvas = ({
     shape container background needs to be cleared by setting its width and height */
     setAuxCanvasDimension(300, 150);
     if (!auxCtx) return;
-    auxCtx.globalAlpha = lineOpacity;
+    auxCtx.globalAlpha = opacity;
+    auxCtx.shadowBlur = shadowBlur;
+    auxCtx.shadowColor = "blue";
   };
 
   const performAction = (point: Point) => {
@@ -685,7 +691,7 @@ const Canvas = ({
     shapePath.closePath();
     if (!auxCtx) return;
     auxCtx.clip(shapePath);
-    auxCtx.globalAlpha = lineOpacity;
+    auxCtx.globalAlpha = opacity;
     auxCtx.fillStyle = currentColor;
     auxCtx.fill(shapePath);
     const base64 = auxCanvas.current.toDataURL();

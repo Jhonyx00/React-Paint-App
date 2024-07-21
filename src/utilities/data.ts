@@ -13,6 +13,7 @@ import rectangle from "../assets/rectangle.svg";
 import select from "../assets/select.svg";
 import LassoSelect from "../assets/free-form-select.svg";
 import irregularShape from "../assets/irregularShape.svg";
+import text from "../assets/text.svg";
 //arrays
 export const shapes = [
   { name: "Rectangle", path: "M0 0, L0 150, L300 150, L300 0 Z" },
@@ -45,18 +46,18 @@ export const resizeButtons = [
 ];
 
 export const colors = [
-  { id: 1, color: "#ece6d0" },
-  { id: 2, color: "#df9d81" },
-  { id: 3, color: "#d7e235" },
-  { id: 4, color: "#c5b82b" },
-  { id: 5, color: "#f7512b" },
-  { id: 6, color: "#008a93" },
-  { id: 7, color: "#7b4b59" },
-  { id: 8, color: "#f8e300" },
-  { id: 9, color: "#5f89ca" },
-  { id: 10, color: "#b070db" },
-  { id: 11, color: "#43d26e" },
-  { id: 13, color: "#ffcac0" },
+  { id: 1, color: "#577399" },
+  { id: 2, color: "#efe8d3" },
+  { id: 3, color: "#e2bf46" },
+  { id: 4, color: "#a867f1" },
+  { id: 5, color: "#cbe5a6" },
+  { id: 6, color: "#67c6aa" },
+  { id: 7, color: "#b35056" },
+  { id: 8, color: "#45afd7" },
+  { id: 9, color: "#b0008d" },
+  { id: 10, color: "#70995e" },
+  { id: 11, color: "#97a8ff" },
+  { id: 13, color: "#f1b9b1" },
 ];
 
 export const toolsItems: IconTool[] = [
@@ -79,10 +80,10 @@ export const toolsItems: IconTool[] = [
     icon: irregularShape,
   },
   {
-    toolGroupID: 4,
+    toolGroupID: 6,
     toolId: 4,
-    name: "Eraser 2",
-    icon: oval,
+    name: "Text",
+    icon: text,
   },
 ];
 

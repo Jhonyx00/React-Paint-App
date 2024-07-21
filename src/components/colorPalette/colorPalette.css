@@ -1,11 +1,11 @@
 .tool-container {
   display: grid;
   place-items: center;
-  border: 2px solid lightgray;
   background-color: white;
-  padding: 0.2em;
-  margin: 0.2em;
-
+  padding: 0.4em;
+  margin: 0.4em;
+  /* border: 2px solid lightgray; */
+  border-radius: 0.6em;
   span {
     font-size: 12px;
     text-align: center;
@@ -43,7 +43,9 @@
         cursor: pointer;
         width: 2.4em;
         height: 2.4em;
-        padding: 0.2em;
+        /* padding: 0.2em; */
+        overflow: hidden;
+        border-radius: 0.6em;
         border: 2px solid lightgray;
         background-color: white;
       }

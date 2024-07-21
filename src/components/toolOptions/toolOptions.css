@@ -1,0 +1,28 @@
+.tool-options {
+  background-color: white;
+  padding: 0.4em;
+  margin: 0.4em;
+  /* border: 2px solid lightgray; */
+  display: flex;
+  flex-direction: column;
+  border-radius: 0.6em;
+
+  span {
+    font-size: 12px;
+    color: gray;
+    font-weight: 500;
+    padding: inherit;
+    padding: 0.2em;
+  }
+
+  .option {
+    display: flex;
+    flex-direction: column;
+
+    input[type="range"] {
+      cursor: pointer;
+      accent-color: rgb(26, 111, 222);
+      border-radius: 0.6em;
+    }
+  }
+}

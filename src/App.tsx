@@ -16,6 +16,7 @@ import { Position } from "./interfaces/position.ts";
 import { shapeItems, toolsItems, selectItems } from "./utilities/data.ts";
 import { Point } from "./interfaces/point.ts";
 import Menu from "./components/menu/Menu.tsx";
+import ToolOptions from "./components/toolOptions/ToolOptions.tsx";
 
 const App = () => {
   const canvasContainer = useRef<HTMLDivElement>(null);
@@ -77,19 +78,10 @@ const App = () => {
     setCursorPosition(precisePoint);
   };
 
-  const [lineWidth, setLineWidth] = useState<number>(1);
-  const [lineOpacity, setLineOpacity] = useState<number>(100);
-
   const [selected, setSelected] = useState<boolean>(false);
-  const handleWidthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setLineWidth(parseInt(value));
-  };
-
-  const handleOpaictyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setLineOpacity(parseInt(value));
-  };
+  const [lineWidth, setLineWidth] = useState<number>(1);
+  const [opacity, setOpacity] = useState<number>(100);
+  const [shadowBlur, setShadowBlur] = useState<number>(0);
 
   return (
     <div className="toolbar-canvas-container">
@@ -113,30 +105,14 @@ const App = () => {
           setSelected={setSelected}
         />
         <ColorPalette setCurrentColor={setCurrentColor} />
-
-        <div className="lineWidth">
-          <span>Brush Control</span>
-          <div className="size">
-            <input
-              type="range"
-              min={1}
-              max={100}
-              onChange={handleWidthChange}
-              value={lineWidth}
-            />
-            <span>{lineWidth}</span>
-          </div>
-          <div className="size">
-            <input
-              type="range"
-              min={1}
-              max={100}
-              onChange={handleOpaictyChange}
-              value={lineOpacity}
-            />
-            <span>{lineOpacity}%</span>
-          </div>
-        </div>
+        <ToolOptions
+          lineWidth={lineWidth}
+          opacity={opacity}
+          shadowBlur={shadowBlur}
+          setShadowBlur={setShadowBlur}
+          setLineWidth={setLineWidth}
+          setOpacity={setOpacity}
+        />
       </div>
 
       <div className="canvas-statusbar-container">
@@ -153,7 +129,8 @@ const App = () => {
             currentColor={currentColor}
             canvasPosition={canvasPosition}
             lineWidth={lineWidth}
-            lineOpacity={lineOpacity / 100}
+            opacity={opacity / 100}
+            shadowBlur={shadowBlur}
             setSelected={setSelected}
           />
         </div>
