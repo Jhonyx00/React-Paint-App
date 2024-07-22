@@ -23,10 +23,6 @@
       overflow: hidden;
       position: relative;
       background-color: rgb(18, 39, 115);
-
-      .prueba {
-        position: absolute;
-      }
     }
 
     .status-bar-container {

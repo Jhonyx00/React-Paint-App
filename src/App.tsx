@@ -29,7 +29,7 @@ const App = () => {
   const prueba = useRef<HTMLDivElement>(null);
   const [XY, setXY] = useState<Point>({ x: 0, y: 0 });
   const [pos, setPos] = useState({ left: 0, top: 0 });
-  const [action, setAction] = useState<boolean>(false);
+  const [transition, setTransition] = useState<boolean>(false);
 
   const [canvasPosition, setCanvasPosition] = useState<Position>({
     left: 0,
@@ -78,7 +78,7 @@ const App = () => {
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!e.ctrlKey) return;
 
-    if (action) setAction(false);
+    if (transition) setTransition(false);
 
     setIsMoving(true);
     setXY({
@@ -107,7 +107,7 @@ const App = () => {
 
   const handleDblClick = () => {
     if (pos.left || pos.top) {
-      setAction(true);
+      setTransition(true);
       setPos({ left: 0, top: 0 });
     }
   };
@@ -158,12 +158,13 @@ const App = () => {
           {selected && <Menu />}
 
           <div
-            className="prueba"
+            className="moving-container"
             ref={prueba}
             style={{
+              position: "absolute",
               left: pos.left + "px",
               top: pos.top + "px",
-              transition: action ? "left 500ms ease, top 500ms ease" : "",
+              transition: transition ? "left 400ms ease, top 400ms ease" : "",
             }}
           >
             <Canvas
