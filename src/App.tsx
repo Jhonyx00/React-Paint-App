@@ -2,29 +2,34 @@
 import { useEffect, useRef, useState } from "react";
 
 //React JSX Elements
-import Tool from "./components/tool/tool.tsx";
-import Canvas from "./components/canvas/canvas.tsx";
-import ColorPalette from "./components/colorPalette/colorPalette.tsx";
+import Tool from "./components/tool/Tool.tsx";
+import Canvas from "./components/canvas/Canvas.tsx";
+import ColorPalette from "./components/colorPalette/ColorPalette.tsx";
 
 //Interfaces
 import { CurrentTool } from "./interfaces/IconTool.ts";
-import { Dimension } from "./interfaces/dimension.ts";
+import { Dimension } from "./interfaces/Dimension.ts";
 
 //Styles
 import "./App.css";
-import { Position } from "./interfaces/position.ts";
+import { Position } from "./interfaces/Position.ts";
 import { shapeItems, toolsItems, selectItems } from "./utilities/data.ts";
-import { Point } from "./interfaces/point.ts";
+import { Point } from "./interfaces/Point.ts";
 import Menu from "./components/menu/Menu.tsx";
 import ToolOptions from "./components/toolOptions/ToolOptions.tsx";
 
 const App = () => {
   const canvasContainer = useRef<HTMLDivElement>(null);
   const [currentColor, setCurrentColor] = useState<string>("");
-  // const canvasPosition: Position = {
-  //   left: canvasContainer.current?.getBoundingClientRect().left!,
-  //   top: canvasContainer.current?.getBoundingClientRect().top!,
-  // };
+  const [selected, setSelected] = useState<boolean>(false);
+  const [lineWidth, setLineWidth] = useState<number>(1);
+  const [opacity, setOpacity] = useState<number>(100);
+  const [shadowBlur, setShadowBlur] = useState<number>(0);
+  const [isMoving, setIsMoving] = useState<boolean>(false);
+  const prueba = useRef<HTMLDivElement>(null);
+  const [XY, setXY] = useState<Point>({ x: 0, y: 0 });
+  const [pos, setPos] = useState({ left: 0, top: 0 });
+  const [action, setAction] = useState<boolean>(false);
 
   const [canvasPosition, setCanvasPosition] = useState<Position>({
     left: 0,
@@ -70,18 +75,42 @@ const App = () => {
     };
   }, []);
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const precisePoint: Point = {
-      x: e.clientX - canvasPosition.left,
-      y: e.clientY - canvasPosition.top,
-    };
-    setCursorPosition(precisePoint);
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!e.ctrlKey) return;
+
+    if (action) setAction(false);
+
+    setIsMoving(true);
+    setXY({
+      x: e.clientX - pos.left,
+      y: e.clientY - pos.top,
+    });
   };
 
-  const [selected, setSelected] = useState<boolean>(false);
-  const [lineWidth, setLineWidth] = useState<number>(1);
-  const [opacity, setOpacity] = useState<number>(100);
-  const [shadowBlur, setShadowBlur] = useState<number>(0);
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target !== canvasContainer.current) {
+      setCursorPosition({
+        x: e.nativeEvent.offsetX,
+        y: e.nativeEvent.offsetY,
+      });
+    }
+    if (!isMoving) return;
+    setPos({
+      left: e.clientX - XY.x,
+      top: e.clientY - XY.y,
+    });
+  };
+
+  const handleMouseUp = () => {
+    setIsMoving(false);
+  };
+
+  const handleDblClick = () => {
+    if (pos.left || pos.top) {
+      setAction(true);
+      setPos({ left: 0, top: 0 });
+    }
+  };
 
   return (
     <div className="toolbar-canvas-container">
@@ -114,25 +143,41 @@ const App = () => {
           setOpacity={setOpacity}
         />
       </div>
-
       <div className="canvas-statusbar-container">
         <div
           ref={canvasContainer}
           className="canvas-main-container"
           onMouseMove={handleMouseMove}
+          onMouseDown={handleMouseDown}
+          onMouseUp={handleMouseUp}
+          onDoubleClick={handleDblClick}
+          style={{
+            cursor: isMoving ? "grabbing" : "crosshair",
+          }}
         >
           {selected && <Menu />}
 
-          <Canvas
-            parentSize={parentSize}
-            currentTool={currentTool}
-            currentColor={currentColor}
-            canvasPosition={canvasPosition}
-            lineWidth={lineWidth}
-            opacity={opacity / 100}
-            shadowBlur={shadowBlur}
-            setSelected={setSelected}
-          />
+          <div
+            className="prueba"
+            ref={prueba}
+            style={{
+              left: pos.left + "px",
+              top: pos.top + "px",
+              transition: action ? "left 500ms ease, top 500ms ease" : "",
+            }}
+          >
+            <Canvas
+              parentSize={parentSize}
+              currentTool={currentTool}
+              currentColor={currentColor}
+              canvasPosition={canvasPosition}
+              lineWidth={lineWidth}
+              opacity={opacity / 100}
+              shadowBlur={shadowBlur}
+              setSelected={setSelected}
+              pos={pos}
+            />
+          </div>
         </div>
 
         <div className="status-bar-container">

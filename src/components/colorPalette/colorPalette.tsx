@@ -1,21 +1,24 @@
-import { useRef } from "react";
+import { Dispatch, SetStateAction, useRef } from "react";
 import "./colorPalette.css";
 
 //data
 import { colors } from "../../utilities/data";
 
-const ColorPalette = ({ setCurrentColor }: any): React.JSX.Element => {
+const ColorPalette = ({
+  setCurrentColor,
+}: {
+  setCurrentColor: Dispatch<SetStateAction<string>>;
+}) => {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleClick = (color: string) => {
     setCurrentColor(color);
-
     if (inputRef.current) {
       inputRef.current.value = color;
     }
   };
 
-  const handleChange = (event: { target: any }) => {
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setCurrentColor(event.target.value);
   };
 

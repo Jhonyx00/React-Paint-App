@@ -7,18 +7,18 @@ import React, {
 } from "react";
 
 //interfaces
-import { Point } from "../../interfaces/point";
+import { Point } from "../../interfaces/Point";
 import { CurrentTool } from "../../interfaces/IconTool";
-import { ShapeContainer } from "../../interfaces/shapeContainer";
+import { ShapeContainer } from "../../interfaces/ShapeContainer";
 
 //data
 import { shapes } from "../../utilities/data";
 
 //styles
 import "./canvas.css";
-import { Position } from "../../interfaces/position";
+import { Position } from "../../interfaces/Position";
 import ShapePanel from "../shapePanel/ShapePanel";
-import { Dimension } from "../../interfaces/dimension";
+import { Dimension } from "../../interfaces/Dimension";
 
 const Canvas = ({
   parentSize,
@@ -28,6 +28,7 @@ const Canvas = ({
   lineWidth,
   opacity,
   shadowBlur,
+  pos,
   setSelected,
 }: {
   parentSize: Dimension;
@@ -37,6 +38,7 @@ const Canvas = ({
   lineWidth: number;
   opacity: number;
   shadowBlur: number;
+  pos: Position;
   setSelected: Dispatch<SetStateAction<boolean>>;
 }) => {
   //refs
@@ -113,14 +115,14 @@ const Canvas = ({
 
   ///events
   const handleMouseDown = (event: React.MouseEvent) => {
+    if (event.ctrlKey) return;
     setIsDrawing(true);
-
     switch (event.target) {
       case mainCanvas.current:
         /// click on canvas, and perform the last action
         setMouseDownPosition({
-          x: event.clientX - canvasPosition.left,
-          y: event.clientY - canvasPosition.top,
+          x: event.clientX - canvasPosition.left - pos.left,
+          y: event.clientY - canvasPosition.top - pos.top,
         });
 
         setPointerState("onCanvas");
@@ -138,8 +140,12 @@ const Canvas = ({
       case buttons.current:
         setPointerState("onShapeContainer");
         setXY({
-          x: event.clientX - shapeContainer.left - canvasPosition.left,
-          y: event.clientY - shapeContainer.top - canvasPosition.top,
+          x:
+            event.clientX -
+            shapeContainer.left -
+            canvasPosition.left -
+            pos.left,
+          y: event.clientY - shapeContainer.top - canvasPosition.top - pos.top,
         });
         checkSetAction();
         break;
@@ -153,14 +159,15 @@ const Canvas = ({
   };
 
   const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (event.ctrlKey) return;
     const point: Point = {
       x: event.clientX,
       y: event.clientY,
     };
     // substract left value of canvas container (toolbar and possibly a menu on top)
     const precisePoint: Point = {
-      x: point.x - canvasPosition.left,
-      y: point.y - canvasPosition.top,
+      x: point.x - canvasPosition.left - pos.left,
+      y: point.y - canvasPosition.top - pos.top,
     };
 
     setMouseMovePosition(precisePoint);
@@ -185,7 +192,8 @@ const Canvas = ({
     }
   };
 
-  const handleMouseUp = () => {
+  const handleMouseUp = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (event.ctrlKey) return;
     setIsDrawing(false);
     switch (currentTool.toolGroupID) {
       case 1:
@@ -270,10 +278,11 @@ const Canvas = ({
           minX: point.x,
           minY: point.y,
         });
+        if (lassoPoints.length > 0) setLassoPoints([]);
+
         if (!isImagePlaced) return;
         drawLassoImage();
         resetSelection();
-        setLassoPoints([]);
         break;
 
       case 10:
@@ -285,13 +294,13 @@ const Canvas = ({
           minX: point.x,
           minY: point.y,
         });
+        if (lassoPoints.length > 0) setLassoPoints([]);
+
         if (!isImagePlaced) return;
         drawLassoImage();
         resetSelection();
         setPath(-1);
-        setLassoPoints([]);
         break;
-
       default:
         break;
     }
@@ -1020,6 +1029,7 @@ const Canvas = ({
     }));
   };
 
+  /// creo que para dibujar de manera fluida debo usar los eventos de mouse out y mouse over para que comienze a dibujar y que tambien deje de dibujar
   return (
     <div
       className="canvas-container"
@@ -1030,10 +1040,10 @@ const Canvas = ({
     >
       <ShapePanel
         dimension={{
-          height: shapeContainer.height,
-          width: shapeContainer.width,
-          left: shapeContainer.left,
           top: shapeContainer.top,
+          left: shapeContainer.left,
+          width: shapeContainer.width,
+          height: shapeContainer.height,
         }}
         canvasRef={auxCanvas}
         buttonsRef={buttons}

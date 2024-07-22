@@ -1,4 +1,4 @@
-import React, { Dispatch, SetStateAction } from "react";
+import { Dispatch, SetStateAction } from "react";
 import { CurrentTool, IconTool } from "../../interfaces/IconTool";
 import "./tool.css";
 

@@ -1,5 +1,5 @@
 import { Dispatch, RefObject, SetStateAction } from "react";
-import { ShapeContainer } from "../../interfaces/shapeContainer";
+import { ShapeContainer } from "../../interfaces/ShapeContainer";
 import { resizeButtons } from "../../utilities/data";
 import "./shapePanel.css";
 const ShapePanel = ({
