@@ -40,7 +40,9 @@ const StatusBar = ({
       </div>
 
       <div className="zoom">
-        <span>{scaleValue}%</span>
+        <span>
+          <b>{scaleValue}%</b>
+        </span>
         <input
           type="range"
           name=""

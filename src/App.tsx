@@ -94,8 +94,8 @@ const App = () => {
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target !== canvasContainer.current) {
       setCursorPosition({
-        x: e.nativeEvent.offsetX,
-        y: e.nativeEvent.offsetY,
+        x: e.nativeEvent.clientX - canvasPosition.left,
+        y: e.nativeEvent.clientY - canvasPosition.top,
       });
     }
     if (!isMoving) return;
@@ -174,11 +174,8 @@ const App = () => {
             className="moving-container"
             ref={movingContainer}
             style={{
-              position: "absolute",
-              left: pos.left + "px",
-              top: pos.top + "px",
-              transform: "translateZ(0)", //force composition layer to avoid anti aliasing
-              transition: transition ? "left 400ms ease, top 400ms ease" : "",
+              transform: `translate(${pos.left}px, ${pos.top}px)`,
+              transition: transition ? "transform 400ms ease" : "",
             }}
           >
             <Canvas

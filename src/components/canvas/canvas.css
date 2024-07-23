@@ -3,7 +3,7 @@
   height: 100%;
   position: relative;
   overflow: hidden;
-
+  transition: scale 400ms ease;
   .canvas {
     background-color: white;
     display: grid;

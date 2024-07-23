@@ -6,42 +6,37 @@
 
   background-color: rgb(210, 210, 210);
 
+  gap: 0.4em;
   span {
     font-size: 0.8em;
-    padding: 0em 0.6em;
+    padding: 0.2em 0.6em;
     display: flex;
     align-items: center;
     justify-content: center;
+    background-color: white;
+    border-radius: 0.4em;
+    color: gray;
   }
 
   .zoom,
   .text {
     display: flex;
     flex-direction: row;
-    height: max-content;
-
-    /* background-color: darkblue; */
+    /* height: max-content; */
+    gap: 0.4em;
   }
 
   .zoom {
-    span {
-      background-color: white;
-      border-radius: 0.4em;
-    }
     input[type="range"] {
       accent-color: rgb(26, 111, 222);
       cursor: pointer;
     }
   }
 
-  .text {
+  /* .text {
     span:nth-child(2) {
       border-left: 2px solid rgb(164, 164, 164);
       border-right: 2px solid rgb(164, 164, 164);
     }
-  }
+  } */
 }
-
-/* * {
-  border: 1px solid red;
-} */

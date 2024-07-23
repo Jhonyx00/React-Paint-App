@@ -133,9 +133,8 @@ const Canvas = ({
 
     if (!mainCanvas.current) return;
     const { left, top } = mainCanvas.current.getBoundingClientRect();
-    const rect = { left: left, top: top };
-    const point = getScaledPoint(event.clientX, event.clientY, rect);
-    // const point = getScaledPoint(event.clientX, event.clientY, canvasBounding);
+    const canvasBounding = { left: left, top: top };
+    const point = getScaledPoint(event.clientX, event.clientY, canvasBounding);
 
     switch (event.target) {
       case mainCanvas.current:
@@ -175,9 +174,13 @@ const Canvas = ({
 
     if (!mainCanvas.current) return;
     const { left, top } = mainCanvas.current.getBoundingClientRect();
-    const rect = { left: left, top: top };
-    const point = getScaledPoint(event.clientX, event.clientY, rect);
-    setMouseMovePosition(point);
+    const canvasBounding = { left: left, top: top };
+    const scaledPoint = getScaledPoint(
+      event.clientX,
+      event.clientY,
+      canvasBounding
+    );
+    setMouseMovePosition(scaledPoint);
 
     if (!isDrawing) return;
 
@@ -187,11 +190,11 @@ const Canvas = ({
         break;
 
       case "onShapeContainer":
-        moveShapeContainer(point);
+        moveShapeContainer(scaledPoint);
         break;
 
       case "onResizeButton":
-        setResizeValues(point);
+        setResizeValues(scaledPoint);
         break;
 
       default:
@@ -225,18 +228,18 @@ const Canvas = ({
   };
 
   const getScaledPoint = (
-    posX: number,
-    posY: number,
-    rect: Position
+    x: number,
+    y: number,
+    canvasBounding: Position
   ): Point => {
     const scaled = {
-      x: (posX - canvasPosition.left) / zoom - pos.left,
-      y: (posY - canvasPosition.top) / zoom - pos.top,
+      x: (x - canvasPosition.left) / zoom - pos.left,
+      y: (y - canvasPosition.top) / zoom - pos.top,
     };
 
     const offsetValues = {
-      x: posX / zoom - rect.left / zoom,
-      y: posY / zoom - rect.top / zoom,
+      x: x / zoom - canvasBounding.left / zoom,
+      y: y / zoom - canvasBounding.top / zoom,
     };
 
     const newValue = {
@@ -245,8 +248,8 @@ const Canvas = ({
     };
 
     const point: Point = {
-      x: (posX - canvasPosition.left) / zoom - newValue.x - pos.left,
-      y: (posY - canvasPosition.top) / zoom - newValue.y - pos.top,
+      x: (x - canvasPosition.left) / zoom - newValue.x - pos.left,
+      y: (y - canvasPosition.top) / zoom - newValue.y - pos.top,
     };
 
     return point;
