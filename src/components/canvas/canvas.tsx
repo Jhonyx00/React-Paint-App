@@ -29,6 +29,7 @@ const Canvas = ({
   opacity,
   shadowBlur,
   pos,
+  zoom,
   setSelected,
 }: {
   parentSize: Dimension;
@@ -39,6 +40,7 @@ const Canvas = ({
   opacity: number;
   shadowBlur: number;
   pos: Position;
+  zoom: number;
   setSelected: Dispatch<SetStateAction<boolean>>;
 }) => {
   //refs
@@ -94,6 +96,11 @@ const Canvas = ({
     "onShapeContainer" | "onResizeButton" | "onCanvas"
   >();
 
+  // const [canvasBounding, setCanvasBounding] = useState<Position>({
+  //   left: 0,
+  //   top: 0,
+  // });
+
   useEffect(() => {
     if (!mainCanvas.current) return;
     const mainCtx = mainCanvas.current.getContext("2d", {
@@ -113,18 +120,27 @@ const Canvas = ({
     setAuxCtx(auxCtx);
   }, []);
 
+  useEffect(() => {
+    if (canvasContainer.current) {
+      canvasContainer.current.style.scale = `${zoom}`;
+    }
+  }, [zoom]);
+
   ///events
   const handleMouseDown = (event: React.MouseEvent) => {
     if (event.ctrlKey) return;
     setIsDrawing(true);
+
+    if (!mainCanvas.current) return;
+    const { left, top } = mainCanvas.current.getBoundingClientRect();
+    const rect = { left: left, top: top };
+    const point = getScaledPoint(event.clientX, event.clientY, rect);
+    // const point = getScaledPoint(event.clientX, event.clientY, canvasBounding);
+
     switch (event.target) {
       case mainCanvas.current:
         /// click on canvas, and perform the last action
-        setMouseDownPosition({
-          x: event.clientX - canvasPosition.left - pos.left,
-          y: event.clientY - canvasPosition.top - pos.top,
-        });
-
+        setMouseDownPosition(point);
         setPointerState("onCanvas");
         setSelected(false);
 
@@ -140,19 +156,15 @@ const Canvas = ({
       case buttons.current:
         setPointerState("onShapeContainer");
         setXY({
-          x:
-            event.clientX -
-            shapeContainer.left -
-            canvasPosition.left -
-            pos.left,
-          y: event.clientY - shapeContainer.top - canvasPosition.top - pos.top,
+          x: point.x - shapeContainer.left,
+          y: point.y - shapeContainer.top,
         });
         checkSetAction();
         break;
 
       default:
         setPointerState("onResizeButton");
-        setMouseDownPosition({ x: event.clientX, y: event.clientY });
+        setMouseDownPosition(point);
         checkSetAction();
         break;
     }
@@ -160,17 +172,12 @@ const Canvas = ({
 
   const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
     if (event.ctrlKey) return;
-    const point: Point = {
-      x: event.clientX,
-      y: event.clientY,
-    };
-    // substract left value of canvas container (toolbar and possibly a menu on top)
-    const precisePoint: Point = {
-      x: point.x - canvasPosition.left - pos.left,
-      y: point.y - canvasPosition.top - pos.top,
-    };
 
-    setMouseMovePosition(precisePoint);
+    if (!mainCanvas.current) return;
+    const { left, top } = mainCanvas.current.getBoundingClientRect();
+    const rect = { left: left, top: top };
+    const point = getScaledPoint(event.clientX, event.clientY, rect);
+    setMouseMovePosition(point);
 
     if (!isDrawing) return;
 
@@ -180,7 +187,7 @@ const Canvas = ({
         break;
 
       case "onShapeContainer":
-        moveShapeContainer(precisePoint);
+        moveShapeContainer(point);
         break;
 
       case "onResizeButton":
@@ -216,6 +223,34 @@ const Canvas = ({
         break;
     }
   };
+
+  const getScaledPoint = (
+    posX: number,
+    posY: number,
+    rect: Position
+  ): Point => {
+    const scaled = {
+      x: (posX - canvasPosition.left) / zoom - pos.left,
+      y: (posY - canvasPosition.top) / zoom - pos.top,
+    };
+
+    const offsetValues = {
+      x: posX / zoom - rect.left / zoom,
+      y: posY / zoom - rect.top / zoom,
+    };
+
+    const newValue = {
+      x: scaled.x - offsetValues.x,
+      y: scaled.y - offsetValues.y,
+    };
+
+    const point: Point = {
+      x: (posX - canvasPosition.left) / zoom - newValue.x - pos.left,
+      y: (posY - canvasPosition.top) / zoom - newValue.y - pos.top,
+    };
+
+    return point;
+  };
   // if shape container is moved or resized, now has a background image
   const checkSetAction = () => {
     if (isImagePlaced) return;
@@ -240,6 +275,7 @@ const Canvas = ({
     mainCtx.lineWidth = lineWidth;
     mainCtx.shadowBlur = shadowBlur;
     mainCtx.shadowColor = "blue";
+    // mainCtx.scale(zoom, zoom);
   };
 
   const setAuxCanvasOptions = () => {
@@ -1029,7 +1065,6 @@ const Canvas = ({
     }));
   };
 
-  /// creo que para dibujar de manera fluida debo usar los eventos de mouse out y mouse over para que comienze a dibujar y que tambien deje de dibujar
   return (
     <div
       className="canvas-container"

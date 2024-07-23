@@ -17,6 +17,7 @@ import { shapeItems, toolsItems, selectItems } from "./utilities/data.ts";
 import { Point } from "./interfaces/Point.ts";
 import Menu from "./components/menu/Menu.tsx";
 import ToolOptions from "./components/toolOptions/ToolOptions.tsx";
+import StatusBar from "./components/statusBar/StatusBar.tsx";
 
 const App = () => {
   const canvasContainer = useRef<HTMLDivElement>(null);
@@ -26,11 +27,13 @@ const App = () => {
   const [opacity, setOpacity] = useState<number>(100);
   const [shadowBlur, setShadowBlur] = useState<number>(0);
   const [isMoving, setIsMoving] = useState<boolean>(false);
-  const prueba = useRef<HTMLDivElement>(null);
+  const movingContainer = useRef<HTMLDivElement>(null);
   const [XY, setXY] = useState<Point>({ x: 0, y: 0 });
   const [pos, setPos] = useState({ left: 0, top: 0 });
   const [transition, setTransition] = useState<boolean>(false);
+  // const [zoomPosition, setZoomPosition] = useState<Point>({ x: 0, y: 0 });
 
+  const [scaleValue, setScaleValue] = useState<number>(100);
   const [canvasPosition, setCanvasPosition] = useState<Position>({
     left: 0,
     top: 0,
@@ -70,6 +73,7 @@ const App = () => {
       }
     };
     window.addEventListener("wheel", handleWheel, { passive: false });
+    window.addEventListener("keydown", handleKeyDown);
     return () => {
       window.removeEventListener("wheel", handleWheel);
     };
@@ -109,6 +113,16 @@ const App = () => {
     if (pos.left || pos.top) {
       setTransition(true);
       setPos({ left: 0, top: 0 });
+    }
+    if (scaleValue !== 100) {
+      setScaleValue(100);
+    }
+  };
+
+  const handleKeyDown = (event: KeyboardEvent) => {
+    const key = event.key;
+    if (event.ctrlKey && (key === "+" || key === "-" || key === "=")) {
+      event.preventDefault();
     }
   };
 
@@ -156,14 +170,14 @@ const App = () => {
           }}
         >
           {selected && <Menu />}
-
           <div
             className="moving-container"
-            ref={prueba}
+            ref={movingContainer}
             style={{
               position: "absolute",
               left: pos.left + "px",
               top: pos.top + "px",
+              transform: "translateZ(0)", //force composition layer to avoid anti aliasing
               transition: transition ? "left 400ms ease, top 400ms ease" : "",
             }}
           >
@@ -177,27 +191,18 @@ const App = () => {
               shadowBlur={shadowBlur}
               setSelected={setSelected}
               pos={pos}
+              zoom={scaleValue / 100}
             />
           </div>
         </div>
 
-        <div className="status-bar-container">
-          <span className="dimension">
-            Size:{" "}
-            <b>
-              {parentSize.width}, {parentSize.height}pixels
-            </b>
-          </span>
-          <span className="current-tool">
-            Selected: <b>{currentTool.name}</b>
-          </span>
-          <span className="position">
-            Position:{" "}
-            <b>
-              {cursorPosition.x}, {cursorPosition.y}pixels
-            </b>
-          </span>
-        </div>
+        <StatusBar
+          parentSize={parentSize}
+          cursorPosition={cursorPosition}
+          currentTool={currentTool.name}
+          scaleValue={scaleValue}
+          setScaleValue={setScaleValue}
+        />
       </div>
     </div>
   );
