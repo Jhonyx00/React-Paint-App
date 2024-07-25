@@ -7,5 +7,6 @@
   .canvas {
     background-color: white;
     display: grid;
+    image-rendering: pixelated;
   }
 }

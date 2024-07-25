@@ -4,6 +4,7 @@
 
   .toolbar-container {
     background-color: rgb(232, 232, 232);
+    /* check this background */
   }
 
   .canvas-statusbar-container {
@@ -11,12 +12,11 @@
     height: 100%;
     display: grid;
     grid-template-rows: 95vh 5vh;
-    background-color: rgb(158, 158, 158);
 
     .canvas-main-container {
       overflow: hidden;
       position: relative;
-      background-color: rgb(18, 39, 115);
+      background-color: rgb(42, 73, 141);
     }
   }
 }

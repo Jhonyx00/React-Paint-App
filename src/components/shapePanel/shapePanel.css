@@ -13,6 +13,7 @@
       height: 100%;
       position: absolute;
       inset: 0;
+      image-rendering: pixelated;
     }
 
     .buttons {

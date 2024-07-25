@@ -58,9 +58,11 @@ const Canvas = ({
   const [auxCtx, setAuxCtx] = useState<CanvasRenderingContext2D>();
   const [isImagePlaced, setIsImagePlaced] = useState<boolean>(false);
   const [resizeButtonId, setResizeButtonId] = useState<number>(0);
+
   const [selectionImage, setSelectionImage] = useState<HTMLImageElement>(
     new Image()
   );
+
   const [shapeContainer, setShapeContainer] = useState<ShapeContainer>({
     top: 0,
     left: 0,
@@ -96,21 +98,42 @@ const Canvas = ({
     "onShapeContainer" | "onResizeButton" | "onCanvas"
   >();
 
-  // const [canvasBounding, setCanvasBounding] = useState<Position>({
-  //   left: 0,
-  //   top: 0,
-  // });
-
+  //main canvas init
   useEffect(() => {
     if (!mainCanvas.current) return;
     const mainCtx = mainCanvas.current.getContext("2d", {
       willReadFrequently: true,
     });
     if (!mainCtx) return;
-    mainCtx.lineCap = "round";
     setContext(mainCtx);
-  }, [mainCtx]);
+  }, []);
 
+  //Main canvas config
+  useEffect(() => {
+    setContext((prev) => {
+      if (!prev) return;
+      prev.imageSmoothingEnabled = false;
+      prev.imageSmoothingQuality = "high";
+      return prev;
+    });
+  }, []);
+
+  //Main Canvas options
+  useEffect(() => {
+    setContext((prev) => {
+      if (!prev) return;
+      prev.globalAlpha = opacity;
+      prev.strokeStyle = currentColor;
+      prev.fillStyle = currentColor;
+      prev.lineWidth = lineWidth / zoom;
+      prev.shadowBlur = shadowBlur;
+      prev.shadowColor = currentColor ? currentColor : "black";
+      prev.lineCap = "round";
+      return prev;
+    });
+  }, [opacity, currentColor, lineWidth, shadowBlur, zoom]);
+
+  //Aux canvas init
   useEffect(() => {
     if (!auxCanvas.current) return;
     const auxCtx = auxCanvas.current.getContext("2d", {
@@ -120,11 +143,26 @@ const Canvas = ({
     setAuxCtx(auxCtx);
   }, []);
 
+  //Aux Canvas options
   useEffect(() => {
-    if (canvasContainer.current) {
+    setAuxCtx((prev) => {
+      if (!prev) return;
+      prev.shadowColor = currentColor ? currentColor : "black";
+      prev.shadowBlur = shadowBlur;
+      prev.globalAlpha = opacity;
+      return prev;
+    });
+  }, [opacity, shadowBlur, currentColor]);
+
+  //ZOOM
+  useEffect(() => {
+    if (canvasContainer.current)
       canvasContainer.current.style.scale = `${zoom}`;
-    }
   }, [zoom]);
+
+  useEffect(() => {
+    setShapeContainer((prev) => ({ ...prev, background: currentColor }));
+  }, [currentColor]);
 
   ///events
   const handleMouseDown = (event: React.MouseEvent) => {
@@ -133,37 +171,37 @@ const Canvas = ({
 
     if (!mainCanvas.current) return;
     const { left, top } = mainCanvas.current.getBoundingClientRect();
-    const canvasBounding = { left: left, top: top };
-    const point = getScaledPoint(event.clientX, event.clientY, canvasBounding);
+    const scaledPoint = getScaledPoint(event.clientX, event.clientY, {
+      left,
+      top,
+    });
 
     switch (event.target) {
       case mainCanvas.current:
         /// click on canvas, and perform the last action
-        setMouseDownPosition(point);
+        setMouseDownPosition(scaledPoint);
         setPointerState("onCanvas");
         setSelected(false);
 
         if (shapeContainer.width > 0 && shapeContainer.height > 0) {
           resetShapeContainerProps();
         }
-        setCanvasOptions();
-        setAuxCanvasOptions();
-        performAction({ x: event.clientX, y: event.clientY });
 
+        performAction(scaledPoint);
         break;
 
       case buttons.current:
         setPointerState("onShapeContainer");
         setXY({
-          x: point.x - shapeContainer.left,
-          y: point.y - shapeContainer.top,
+          x: scaledPoint.x - shapeContainer.left,
+          y: scaledPoint.y - shapeContainer.top,
         });
         checkSetAction();
         break;
 
       default:
         setPointerState("onResizeButton");
-        setMouseDownPosition(point);
+        setMouseDownPosition(scaledPoint);
         checkSetAction();
         break;
     }
@@ -174,12 +212,10 @@ const Canvas = ({
 
     if (!mainCanvas.current) return;
     const { left, top } = mainCanvas.current.getBoundingClientRect();
-    const canvasBounding = { left: left, top: top };
-    const scaledPoint = getScaledPoint(
-      event.clientX,
-      event.clientY,
-      canvasBounding
-    );
+    const scaledPoint = getScaledPoint(event.clientX, event.clientY, {
+      left,
+      top,
+    });
     setMouseMovePosition(scaledPoint);
 
     if (!isDrawing) return;
@@ -269,28 +305,6 @@ const Canvas = ({
     }
   };
 
-  const setCanvasOptions = () => {
-    shapeContainer.background = currentColor;
-    if (!mainCtx) return;
-    mainCtx.globalAlpha = opacity;
-    mainCtx.strokeStyle = currentColor;
-    mainCtx.fillStyle = currentColor;
-    mainCtx.lineWidth = lineWidth;
-    mainCtx.shadowBlur = shadowBlur;
-    mainCtx.shadowColor = "blue";
-    // mainCtx.scale(zoom, zoom);
-  };
-
-  const setAuxCanvasOptions = () => {
-    /* if the tool is changed, 
-    shape container background needs to be cleared by setting its width and height */
-    setAuxCanvasDimension(300, 150);
-    if (!auxCtx) return;
-    auxCtx.globalAlpha = opacity;
-    auxCtx.shadowBlur = shadowBlur;
-    auxCtx.shadowColor = "blue";
-  };
-
   const performAction = (point: Point) => {
     switch (currentTool.toolGroupID) {
       case 1:
@@ -303,6 +317,9 @@ const Canvas = ({
         break;
 
       case 2:
+        /* if the tool is changed, 
+        shape container background needs to be cleared by setting its width and height */
+        setAuxCanvasDimension(300, 150);
         if (!isImagePlaced) return;
         fillWhite();
         drawSelection();
@@ -311,6 +328,7 @@ const Canvas = ({
         break;
 
       case 5:
+        setAuxCanvasDimension(300, 150);
         setBounding({
           maxX: 0,
           maxY: 0,
@@ -325,8 +343,8 @@ const Canvas = ({
         break;
 
       case 10:
-        /* set an initial value to start comparing in setMinMaxXY function,
-      in order to get box dimensions of shapeContainer */
+        setAuxCanvasDimension(300, 150);
+        /* set an initial value to start comparing in setMinMaxXY function, in order to get box dimensions of shapeContainer */
         setBounding({
           maxX: 0,
           maxY: 0,
@@ -397,15 +415,32 @@ const Canvas = ({
   };
 
   const drawLine = (): void => {
-    if (mainCtx) {
-      mainCtx.beginPath();
-      mainCtx.moveTo(positionDown.x, positionDown.y);
-      mainCtx.lineTo(positionMove.x, positionMove.y);
-      mainCtx.stroke();
+    setContext((prev) => {
+      if (!prev) return;
+      prev.save();
+      prev.scale(zoom, zoom);
+      prev.beginPath();
+      prev.moveTo(positionDown.x / zoom, positionDown.y / zoom);
+      prev.lineTo(positionMove.x / zoom, positionMove.y / zoom);
+      prev.stroke();
+      prev.restore();
       positionDown.x = positionMove.x;
       positionDown.y = positionMove.y;
       setLassoPoints((prev) => [...prev, positionMove]);
-    }
+      return prev;
+    });
+
+    // if (mainCtx) {
+    //   mainCtx.save();
+    //   mainCtx.scale(zoom, zoom);
+    //   mainCtx.beginPath();
+    //   mainCtx.moveTo(positionDown.x / zoom, positionDown.y / zoom);
+    //   mainCtx.lineTo(positionMove.x / zoom, positionMove.y / zoom);
+    //   mainCtx.stroke();
+    //   mainCtx.restore();
+    //   positionDown.x = positionMove.x;
+    //   positionDown.y = positionMove.y;
+    // }
   };
 
   const drawRectangle = () => {
@@ -743,7 +778,6 @@ const Canvas = ({
     auxCtx.fillStyle = currentColor;
     auxCtx.fill(shapePath);
     const base64 = auxCanvas.current.toDataURL();
-    // pngImage.src = base64;
     setSelectionImage((prev) => {
       prev.src = base64;
       return prev;
@@ -773,12 +807,11 @@ const Canvas = ({
 
       if (!auxCanvas.current) return;
       const base64 = auxCanvas.current.toDataURL();
-      ///pngImage.src = base64;
+
       setSelectionImage((prev) => {
         prev.src = base64;
         return prev;
       });
-      auxCtx.drawImage(selectionImage, 0, 0);
     };
   };
 

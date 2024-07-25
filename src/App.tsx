@@ -31,7 +31,6 @@ const App = () => {
   const [XY, setXY] = useState<Point>({ x: 0, y: 0 });
   const [pos, setPos] = useState({ left: 0, top: 0 });
   const [transition, setTransition] = useState<boolean>(false);
-  // const [zoomPosition, setZoomPosition] = useState<Point>({ x: 0, y: 0 });
 
   const [scaleValue, setScaleValue] = useState<number>(100);
   const [canvasPosition, setCanvasPosition] = useState<Position>({
@@ -72,10 +71,17 @@ const App = () => {
         event.preventDefault();
       }
     };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const key = event.key;
+      if (event.ctrlKey && (key === "+" || key === "-" || key === "=")) {
+        event.preventDefault();
+      }
+    };
     window.addEventListener("wheel", handleWheel, { passive: false });
     window.addEventListener("keydown", handleKeyDown);
     return () => {
       window.removeEventListener("wheel", handleWheel);
+      window.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
 
@@ -116,13 +122,6 @@ const App = () => {
     }
     if (scaleValue !== 100) {
       setScaleValue(100);
-    }
-  };
-
-  const handleKeyDown = (event: KeyboardEvent) => {
-    const key = event.key;
-    if (event.ctrlKey && (key === "+" || key === "-" || key === "=")) {
-      event.preventDefault();
     }
   };
 
