@@ -54,8 +54,10 @@ const Canvas = ({
   const [lassoPath, setLassoPath] = useState<Point[]>([]);
   const [isDrawing, setIsDrawing] = useState<boolean>(false);
   const [lassoPoints, setLassoPoints] = useState<Point[]>([]);
-  const [mainCtx, setContext] = useState<CanvasRenderingContext2D>();
-  const [auxCtx, setAuxCtx] = useState<CanvasRenderingContext2D>();
+
+  const mainCtxRef = useRef<CanvasRenderingContext2D | null>(null);
+  const auxCtxRef = useRef<CanvasRenderingContext2D | null>(null);
+
   const [isImagePlaced, setIsImagePlaced] = useState<boolean>(false);
   const [resizeButtonId, setResizeButtonId] = useState<number>(0);
 
@@ -101,36 +103,30 @@ const Canvas = ({
   //main canvas init
   useEffect(() => {
     if (!mainCanvas.current) return;
-    const mainCtx = mainCanvas.current.getContext("2d", {
+    const ctx = mainCanvas.current.getContext("2d", {
       willReadFrequently: true,
     });
-    if (!mainCtx) return;
-    setContext(mainCtx);
+    mainCtxRef.current = ctx;
   }, []);
 
   //Main canvas config
   useEffect(() => {
-    setContext((prev) => {
-      if (!prev) return;
-      prev.imageSmoothingEnabled = false;
-      prev.imageSmoothingQuality = "high";
-      return prev;
-    });
+    if (!mainCtxRef.current) return;
+    mainCtxRef.current.imageSmoothingEnabled = false;
+    mainCtxRef.current.imageSmoothingQuality = "high";
   }, []);
 
   //Main Canvas options
   useEffect(() => {
-    setContext((prev) => {
-      if (!prev) return;
-      prev.globalAlpha = opacity;
-      prev.strokeStyle = currentColor;
-      prev.fillStyle = currentColor;
-      prev.lineWidth = lineWidth / zoom;
-      prev.shadowBlur = shadowBlur;
-      prev.shadowColor = currentColor ? currentColor : "black";
-      prev.lineCap = "round";
-      return prev;
-    });
+    if (!mainCtxRef.current) return;
+    mainCtxRef.current.globalAlpha = opacity;
+    mainCtxRef.current.globalAlpha = opacity;
+    mainCtxRef.current.strokeStyle = currentColor;
+    mainCtxRef.current.fillStyle = currentColor;
+    mainCtxRef.current.lineWidth = lineWidth / zoom;
+    mainCtxRef.current.shadowBlur = shadowBlur;
+    mainCtxRef.current.shadowColor = currentColor ? currentColor : "black";
+    mainCtxRef.current.lineCap = "round";
   }, [opacity, currentColor, lineWidth, shadowBlur, zoom]);
 
   //Aux canvas init
@@ -139,19 +135,15 @@ const Canvas = ({
     const auxCtx = auxCanvas.current.getContext("2d", {
       willReadFrequently: true,
     });
-    if (!auxCtx) return;
-    setAuxCtx(auxCtx);
+    auxCtxRef.current = auxCtx;
   }, []);
 
   //Aux Canvas options
   useEffect(() => {
-    setAuxCtx((prev) => {
-      if (!prev) return;
-      prev.shadowColor = currentColor ? currentColor : "black";
-      prev.shadowBlur = shadowBlur;
-      prev.globalAlpha = opacity;
-      return prev;
-    });
+    if (!auxCtxRef.current) return;
+    auxCtxRef.current.shadowColor = currentColor ? currentColor : "black";
+    auxCtxRef.current.shadowBlur = shadowBlur;
+    auxCtxRef.current.globalAlpha = opacity;
   }, [opacity, shadowBlur, currentColor]);
 
   //ZOOM
@@ -183,9 +175,8 @@ const Canvas = ({
         setPointerState("onCanvas");
         setSelected(false);
 
-        if (shapeContainer.width > 0 && shapeContainer.height > 0) {
+        if (shapeContainer.width > 0 && shapeContainer.height > 0)
           resetShapeContainerProps();
-        }
 
         performAction(scaledPoint);
         break;
@@ -321,6 +312,7 @@ const Canvas = ({
         shape container background needs to be cleared by setting its width and height */
         setAuxCanvasDimension(300, 150);
         if (!isImagePlaced) return;
+        resetCtxAux(); // reset options like opacity, shadow blur, etc
         fillWhite();
         drawSelection();
         resetSelection();
@@ -338,6 +330,7 @@ const Canvas = ({
         if (lassoPoints.length > 0) setLassoPoints([]);
 
         if (!isImagePlaced) return;
+        //resetCtxAux();
         drawLassoImage();
         resetSelection();
         break;
@@ -354,6 +347,7 @@ const Canvas = ({
         if (lassoPoints.length > 0) setLassoPoints([]);
 
         if (!isImagePlaced) return;
+        resetCtxAux();
         drawLassoImage();
         resetSelection();
         setPath(-1);
@@ -369,8 +363,7 @@ const Canvas = ({
   };
 
   const setAuxCanvasImageData = (image: ImageData) => {
-    if (!auxCtx) return;
-    auxCtx.putImageData(image, 0, 0);
+    auxCtxRef.current?.putImageData(image, 0, 0);
   };
 
   const setAuxCanvasDimension = (width: number, height: number) => {
@@ -415,111 +408,93 @@ const Canvas = ({
   };
 
   const drawLine = (): void => {
-    setContext((prev) => {
-      if (!prev) return;
-      prev.save();
-      prev.scale(zoom, zoom);
-      prev.beginPath();
-      prev.moveTo(positionDown.x / zoom, positionDown.y / zoom);
-      prev.lineTo(positionMove.x / zoom, positionMove.y / zoom);
-      prev.stroke();
-      prev.restore();
-      positionDown.x = positionMove.x;
-      positionDown.y = positionMove.y;
-      setLassoPoints((prev) => [...prev, positionMove]);
-      return prev;
-    });
-
-    // if (mainCtx) {
-    //   mainCtx.save();
-    //   mainCtx.scale(zoom, zoom);
-    //   mainCtx.beginPath();
-    //   mainCtx.moveTo(positionDown.x / zoom, positionDown.y / zoom);
-    //   mainCtx.lineTo(positionMove.x / zoom, positionMove.y / zoom);
-    //   mainCtx.stroke();
-    //   mainCtx.restore();
-    //   positionDown.x = positionMove.x;
-    //   positionDown.y = positionMove.y;
-    // }
+    if (!mainCtxRef.current) return;
+    mainCtxRef.current.save();
+    mainCtxRef.current.scale(zoom, zoom);
+    mainCtxRef.current.beginPath();
+    mainCtxRef.current.moveTo(positionDown.x / zoom, positionDown.y / zoom);
+    mainCtxRef.current.lineTo(positionMove.x / zoom, positionMove.y / zoom);
+    mainCtxRef.current.stroke();
+    mainCtxRef.current.restore();
+    positionDown.x = positionMove.x;
+    positionDown.y = positionMove.y;
+    setLassoPoints((prev) => [...prev, positionMove]);
   };
 
   const drawRectangle = () => {
-    if (mainCtx) {
-      mainCtx.fillRect(
-        shapeContainer.left,
-        shapeContainer.top,
-        shapeContainer.width,
-        shapeContainer.height
-      );
-    }
+    mainCtxRef.current?.fillRect(
+      shapeContainer.left,
+      shapeContainer.top,
+      shapeContainer.width,
+      shapeContainer.height
+    );
   };
 
   const drawTriangle = () => {
-    if (mainCtx) {
-      const polygonCoords: Point[] = [
-        {
-          x: shapeContainer.left + shapeContainer.width * 0.5,
-          y: shapeContainer.top,
-        },
-        {
-          x: shapeContainer.left,
-          y: shapeContainer.top + shapeContainer.height,
-        },
-        {
-          x: shapeContainer.left + shapeContainer.width,
-          y: shapeContainer.top + shapeContainer.height,
-        },
-      ];
+    const polygonCoords: Point[] = [
+      {
+        x: shapeContainer.left + shapeContainer.width * 0.5,
+        y: shapeContainer.top,
+      },
+      {
+        x: shapeContainer.left,
+        y: shapeContainer.top + shapeContainer.height,
+      },
+      {
+        x: shapeContainer.left + shapeContainer.width,
+        y: shapeContainer.top + shapeContainer.height,
+      },
+    ];
 
-      mainCtx.beginPath();
-      mainCtx.moveTo(polygonCoords[0].x, polygonCoords[0].y);
+    if (!mainCtxRef.current) return;
 
-      for (let i = 0; i < polygonCoords.length; i++) {
-        mainCtx.lineTo(polygonCoords[i].x, polygonCoords[i].y);
-      }
-      mainCtx.closePath();
-      mainCtx.fill();
-    }
+    mainCtxRef.current.beginPath();
+    mainCtxRef.current.moveTo(polygonCoords[0].x, polygonCoords[0].y);
+
+    for (let i = 0; i < polygonCoords.length; i++)
+      mainCtxRef.current.lineTo(polygonCoords[i].x, polygonCoords[i].y);
+
+    mainCtxRef.current.closePath();
+    mainCtxRef.current.fill();
   };
 
   const drawEllipse = () => {
     const { width, height, top, left } = shapeContainer;
     const endAngle = Math.PI * 2;
-    if (mainCtx) {
-      mainCtx.beginPath();
-      mainCtx.ellipse(
-        left + width * 0.5,
-        top + height * 0.5,
-        Math.abs(width) * 0.5,
-        Math.abs(height) * 0.5,
-        0,
-        0,
-        endAngle
-      );
-      mainCtx.fill();
-    }
+    if (!mainCtxRef.current) return;
+    mainCtxRef.current.beginPath();
+    mainCtxRef.current.ellipse(
+      left + width * 0.5,
+      top + height * 0.5,
+      Math.abs(width) * 0.5,
+      Math.abs(height) * 0.5,
+      0,
+      0,
+      endAngle
+    );
+    mainCtxRef.current.fill();
   };
 
   const drawPentagon = () => {
     const { width, height, top, left } = shapeContainer;
-    if (mainCtx) {
-      const polygonCoords: Point[] = [
-        { x: left + width * 0.5, y: top },
-        { x: left, y: top + height * 0.38 },
-        { x: left + width * 0.18, y: top + height },
-        { x: left + width * 0.82, y: top + height },
-        { x: left + width, y: top + height * 0.38 },
-      ];
+    const polygonCoords: Point[] = [
+      { x: left + width * 0.5, y: top },
+      { x: left, y: top + height * 0.38 },
+      { x: left + width * 0.18, y: top + height },
+      { x: left + width * 0.82, y: top + height },
+      { x: left + width, y: top + height * 0.38 },
+    ];
 
-      mainCtx.beginPath();
-      mainCtx.moveTo(polygonCoords[0].x, polygonCoords[0].y);
+    if (!mainCtxRef.current) return;
 
-      for (let i = 0; i < polygonCoords.length; i++) {
-        mainCtx.lineTo(polygonCoords[i].x, polygonCoords[i].y);
-      }
-      mainCtx.closePath();
-      mainCtx.fill();
-    }
+    mainCtxRef.current.beginPath();
+    mainCtxRef.current.moveTo(polygonCoords[0].x, polygonCoords[0].y);
+
+    for (let i = 0; i < polygonCoords.length; i++)
+      mainCtxRef.current.lineTo(polygonCoords[i].x, polygonCoords[i].y);
+
+    mainCtxRef.current.closePath();
+    mainCtxRef.current.fill();
   };
 
   const drawHexagon = () => {
@@ -528,74 +503,74 @@ const Canvas = ({
       according to the width and height of aux component:
       width * 0.25 = 25% of aux component height 
       */
-    if (mainCtx) {
-      const polygonCoords: Point[] = [
-        { x: left + width * 0.25, y: top },
-        { x: left, y: top + height * 0.5 },
-        { x: left + width * 0.25, y: top + height },
-        { x: left + width * 0.75, y: top + height },
-        { x: left + width, y: top + height * 0.5 },
-        { x: left + width * 0.75, y: top },
-      ];
+    const polygonCoords: Point[] = [
+      { x: left + width * 0.25, y: top },
+      { x: left, y: top + height * 0.5 },
+      { x: left + width * 0.25, y: top + height },
+      { x: left + width * 0.75, y: top + height },
+      { x: left + width, y: top + height * 0.5 },
+      { x: left + width * 0.75, y: top },
+    ];
 
-      mainCtx.beginPath();
-      mainCtx.moveTo(polygonCoords[0].x, polygonCoords[0].y);
+    if (!mainCtxRef.current) return;
 
-      for (let i = 0; i < polygonCoords.length; i++) {
-        mainCtx.lineTo(polygonCoords[i].x, polygonCoords[i].y);
-      }
-      mainCtx.closePath();
-      mainCtx.fill();
-    }
+    mainCtxRef.current.beginPath();
+    mainCtxRef.current.moveTo(polygonCoords[0].x, polygonCoords[0].y);
+
+    for (let i = 0; i < polygonCoords.length; i++)
+      mainCtxRef.current.lineTo(polygonCoords[i].x, polygonCoords[i].y);
+
+    mainCtxRef.current.closePath();
+    mainCtxRef.current.fill();
   };
 
   const drawStar = () => {
     const { width, height, top, left } = shapeContainer;
 
-    if (mainCtx) {
-      const polygonCoords: Point[] = [
-        { x: left + width * 0.5, y: top },
-        { x: left + width * 0.37, y: top + height * 0.38 },
-        { x: left, y: top + height * 0.38 },
-        { x: left + width * 0.31, y: top + height * 0.59 },
-        { x: left + width * 0.18, y: top + height * 1 },
-        { x: left + width * 0.5, y: top + height * 0.75 },
-        { x: left + width * 0.82, y: top + height * 1 },
-        { x: left + width * 0.69, y: top + height * 0.59 },
-        { x: left + width * 1, y: top + height * 0.38 },
-        { x: left + width * 0.63, y: top + height * 0.38 },
-      ];
+    const polygonCoords: Point[] = [
+      { x: left + width * 0.5, y: top },
+      { x: left + width * 0.37, y: top + height * 0.38 },
+      { x: left, y: top + height * 0.38 },
+      { x: left + width * 0.31, y: top + height * 0.59 },
+      { x: left + width * 0.18, y: top + height * 1 },
+      { x: left + width * 0.5, y: top + height * 0.75 },
+      { x: left + width * 0.82, y: top + height * 1 },
+      { x: left + width * 0.69, y: top + height * 0.59 },
+      { x: left + width * 1, y: top + height * 0.38 },
+      { x: left + width * 0.63, y: top + height * 0.38 },
+    ];
 
-      mainCtx.beginPath();
-      mainCtx.moveTo(polygonCoords[0].x, polygonCoords[0].y);
+    if (!mainCtxRef.current) return;
 
-      for (let i = 0; i < polygonCoords.length; i++) {
-        mainCtx.lineTo(polygonCoords[i].x, polygonCoords[i].y);
-      }
-      mainCtx.closePath();
-      mainCtx.fill();
-    }
+    mainCtxRef.current.beginPath();
+    mainCtxRef.current.moveTo(polygonCoords[0].x, polygonCoords[0].y);
+
+    for (let i = 0; i < polygonCoords.length; i++)
+      mainCtxRef.current.lineTo(polygonCoords[i].x, polygonCoords[i].y);
+
+    mainCtxRef.current.closePath();
+    mainCtxRef.current.fill();
   };
 
   const drawRhombus = () => {
     const { width, height, top, left } = shapeContainer;
-    if (mainCtx) {
-      const polygonCoords: Point[] = [
-        { x: left + width * 0.5, y: top },
-        { x: left, y: top + height * 0.5 },
-        { x: left + width * 0.5, y: top + height },
-        { x: left + width, y: top + height * 0.5 },
-      ];
+    const polygonCoords: Point[] = [
+      { x: left + width * 0.5, y: top },
+      { x: left, y: top + height * 0.5 },
+      { x: left + width * 0.5, y: top + height },
+      { x: left + width, y: top + height * 0.5 },
+    ];
 
-      mainCtx.beginPath();
-      mainCtx.moveTo(polygonCoords[0].x, polygonCoords[0].y);
+    if (!mainCtxRef.current) return;
 
-      for (let i = 0; i < polygonCoords.length; i++) {
-        mainCtx.lineTo(polygonCoords[i].x, polygonCoords[i].y);
-      }
-      mainCtx.closePath();
-      mainCtx.fill();
-    }
+    mainCtxRef.current.beginPath();
+    mainCtxRef.current.moveTo(polygonCoords[0].x, polygonCoords[0].y);
+
+    for (let i = 0; i < polygonCoords.length; i++)
+      mainCtxRef.current.lineTo(polygonCoords[i].x, polygonCoords[i].y);
+
+    mainCtxRef.current.closePath();
+    mainCtxRef.current.fill();
   };
 
   const resetShapeContainerProps = () => {
@@ -615,14 +590,14 @@ const Canvas = ({
   };
 
   const setPath = (id: number) => {
-    if (!auxCtx) return;
+    if (!auxCtxRef.current) return;
     if (id < 0) {
-      auxCtx.clearRect(0, 0, 300, 150);
+      auxCtxRef.current.clearRect(0, 0, 300, 150);
     } else {
       const path = new Path2D(shapes[id - 1].path);
-      auxCtx.fillStyle = shapeContainer.background;
-      auxCtx.clearRect(0, 0, 300, 150);
-      auxCtx.fill(path);
+      auxCtxRef.current.fillStyle = shapeContainer.background;
+      auxCtxRef.current.clearRect(0, 0, 300, 150);
+      auxCtxRef.current.fill(path);
     }
   };
 
@@ -685,16 +660,17 @@ const Canvas = ({
   };
 
   const erase = () => {
-    if (mainCtx) {
-      mainCtx.clearRect(positionMove.x, positionMove.y, lineWidth, lineWidth);
-    }
+    mainCtxRef.current?.clearRect(
+      positionMove.x,
+      positionMove.y,
+      lineWidth,
+      lineWidth
+    );
   };
 
   const drawLassoImage = () => {
     const { left, top, width, height } = shapeContainer;
-    if (!mainCtx) return;
-    mainCtx.globalAlpha = 1;
-    mainCtx.drawImage(selectionImage, left, top, width, height);
+    mainCtxRef.current?.drawImage(selectionImage, left, top, width, height);
   };
 
   const resetSelection = () => {
@@ -705,13 +681,18 @@ const Canvas = ({
     });
   };
 
+  const resetCtxAux = () => {
+    if (!mainCtxRef.current) return;
+    mainCtxRef.current.globalAlpha = 1;
+    mainCtxRef.current.shadowBlur = 0;
+  };
+
   const fillWhite = () => {
     const { left, top, width, height } = shapeContainer;
-    if (!mainCtx) return;
+    if (!mainCtxRef.current) return;
+    mainCtxRef.current.fillStyle = "white";
     if (!isImagePlaced) return;
-    mainCtx.globalAlpha = 1;
-    mainCtx.fillStyle = "white";
-    mainCtx.fillRect(left, top, width, height);
+    mainCtxRef.current?.fillRect(left, top, width, height);
   };
 
   const drawSelection = () => {
@@ -722,17 +703,16 @@ const Canvas = ({
       pointerState === "onResizeButton"
     ) {
       setSelectionImageValues();
-      if (!mainCtx) return;
-      mainCtx.drawImage(selectionImage, left, top, width, height);
+      mainCtxRef.current?.drawImage(selectionImage, left, top, width, height);
     }
   };
 
   // tool: Select & lasso
   const setSelection = (background: string) => {
     const { left, top, width, height } = shapeContainer;
-    if (!mainCtx) return;
+    if (!mainCtxRef.current) return;
     if (width <= 0 && height <= 0) return;
-    const image = mainCtx.getImageData(left, top, width, height);
+    const image = mainCtxRef.current.getImageData(left, top, width, height);
     setAuxCanvasDimension(image.width, image.height);
     setAuxCanvasBg(background);
     setAuxCanvasImageData(image);
@@ -741,21 +721,20 @@ const Canvas = ({
 
   const clearCanvasArea = () => {
     const { left, top, width, height } = shapeContainer;
-    if (!mainCtx) return;
-    mainCtx.clearRect(left, top, width, height);
+    mainCtxRef.current?.clearRect(left, top, width, height);
   };
 
   const clearLassoSelection = () => {
     const { left, top } = shapeContainer;
     if (!selectionImage) return;
     selectionImage.onload = () => {
-      if (!mainCtx) return;
-      mainCtx.translate(left, top);
-      mainCtx.fillStyle = "white";
-      mainCtx.globalAlpha = 1;
+      if (!mainCtxRef.current) return;
+      mainCtxRef.current.translate(left, top);
+      mainCtxRef.current.fillStyle = "white";
+      mainCtxRef.current.globalAlpha = 1;
       if (!shapePath) return;
-      mainCtx.fill(shapePath);
-      mainCtx.setTransform(1, 0, 0, 1, 0, 0);
+      mainCtxRef.current.fill(shapePath);
+      mainCtxRef.current.setTransform(1, 0, 0, 1, 0, 0);
     };
   };
 
@@ -772,11 +751,14 @@ const Canvas = ({
       shapePath.lineTo(lassoPath[i].x - left, lassoPath[i].y - top);
 
     shapePath.closePath();
-    if (!auxCtx) return;
-    auxCtx.clip(shapePath);
-    auxCtx.globalAlpha = opacity;
-    auxCtx.fillStyle = currentColor;
-    auxCtx.fill(shapePath);
+    if (!auxCtxRef.current) return;
+    auxCtxRef.current.globalAlpha = opacity;
+    auxCtxRef.current.fillStyle = currentColor;
+    // auxCtxRef.current.shadowBlur = shadowBlur;
+    // auxCtxRef.current.shadowColor = currentColor;
+
+    auxCtxRef.current.clip(shapePath);
+    auxCtxRef.current.fill(shapePath);
     const base64 = auxCanvas.current.toDataURL();
     setSelectionImage((prev) => {
       prev.src = base64;
@@ -793,8 +775,7 @@ const Canvas = ({
     img.src = auxCanvas.current.toDataURL();
 
     img.onload = () => {
-      if (!auxCtx) return;
-      auxCtx.clearRect(0, 0, width, height); //important
+      auxCtxRef.current?.clearRect(0, 0, width, height); //important
 
       setShapePath(new Path2D()); //reset the path in each selection to erase correctly on canvas
 
@@ -802,8 +783,8 @@ const Canvas = ({
         shapePath.lineTo(lassoPath[i].x - left, lassoPath[i].y - top);
 
       shapePath.closePath();
-      auxCtx.clip(shapePath);
-      auxCtx.drawImage(img, 0, 0);
+      auxCtxRef.current?.clip(shapePath);
+      auxCtxRef.current?.drawImage(img, 0, 0);
 
       if (!auxCanvas.current) return;
       const base64 = auxCanvas.current.toDataURL();
