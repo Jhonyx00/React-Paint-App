@@ -3,21 +3,23 @@ import { useEffect, useRef, useState } from "react";
 
 //React JSX Elements
 import Tool from "./components/tool/Tool.tsx";
+import Menu from "./components/menu/Menu.tsx";
 import Canvas from "./components/canvas/Canvas.tsx";
+import StatusBar from "./components/statusBar/StatusBar.tsx";
+import ToolOptions from "./components/toolOptions/ToolOptions.tsx";
 import ColorPalette from "./components/colorPalette/ColorPalette.tsx";
 
 //Interfaces
+import { Point } from "./interfaces/Point.ts";
+import { Position } from "./interfaces/Position.ts";
+import { ToolItem } from "./interfaces/ToolItem.ts";
 import { Dimension } from "./interfaces/Dimension.ts";
 
 //Styles
 import "./App.css";
-import { Position } from "./interfaces/Position.ts";
+
+//Data
 import { toolItems, selectItems, iconShapes } from "./utilities/data.ts";
-import { Point } from "./interfaces/Point.ts";
-import Menu from "./components/menu/Menu.tsx";
-import ToolOptions from "./components/toolOptions/ToolOptions.tsx";
-import StatusBar from "./components/statusBar/StatusBar.tsx";
-import { ToolItem } from "./interfaces/ToolItem.ts";
 
 const App = () => {
   const canvasContainer = useRef<HTMLDivElement>(null);
