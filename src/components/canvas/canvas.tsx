@@ -8,7 +8,6 @@ import React, {
 
 //interfaces
 import { Point } from "../../interfaces/Point";
-import { CurrentTool } from "../../interfaces/IconTool";
 import { ShapeContainer } from "../../interfaces/ShapeContainer";
 
 //data
@@ -19,6 +18,7 @@ import "./canvas.css";
 import { Position } from "../../interfaces/Position";
 import ShapePanel from "../shapePanel/ShapePanel";
 import { Dimension } from "../../interfaces/Dimension";
+import { ToolItem } from "../../interfaces/ToolItem";
 
 const Canvas = ({
   parentSize,
@@ -33,7 +33,7 @@ const Canvas = ({
   setSelected,
 }: {
   parentSize: Dimension;
-  currentTool: CurrentTool;
+  currentTool: ToolItem;
   currentColor: string;
   canvasPosition: Position;
   lineWidth: number;
@@ -125,7 +125,7 @@ const Canvas = ({
     mainCtxRef.current.fillStyle = currentColor;
     mainCtxRef.current.lineWidth = lineWidth / zoom;
     mainCtxRef.current.shadowBlur = shadowBlur;
-    mainCtxRef.current.shadowColor = currentColor ? currentColor : "black";
+    mainCtxRef.current.shadowColor = currentColor;
     mainCtxRef.current.lineCap = "round";
   }, [opacity, currentColor, lineWidth, shadowBlur, zoom]);
 
@@ -141,7 +141,7 @@ const Canvas = ({
   //Aux Canvas options
   useEffect(() => {
     if (!auxCtxRef.current) return;
-    auxCtxRef.current.shadowColor = currentColor ? currentColor : "black";
+    auxCtxRef.current.shadowColor = currentColor;
     auxCtxRef.current.shadowBlur = shadowBlur;
     auxCtxRef.current.globalAlpha = opacity;
   }, [opacity, shadowBlur, currentColor]);
@@ -157,7 +157,7 @@ const Canvas = ({
   }, [currentColor]);
 
   ///events
-  const handleMouseDown = (event: React.MouseEvent) => {
+  const handleMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
     if (event.ctrlKey) return;
     setIsDrawing(true);
 
@@ -232,7 +232,7 @@ const Canvas = ({
   const handleMouseUp = (event: React.MouseEvent<HTMLDivElement>) => {
     if (event.ctrlKey) return;
     setIsDrawing(false);
-    switch (currentTool.toolGroupID) {
+    switch (currentTool.groupId) {
       case 1:
         resetShapeContainerReferenceProps();
         break;
@@ -259,7 +259,7 @@ const Canvas = ({
     y: number,
     canvasBounding: Position
   ): Point => {
-    const scaled = {
+    const scaledPoint = {
       x: (x - canvasPosition.left) / zoom - pos.left,
       y: (y - canvasPosition.top) / zoom - pos.top,
     };
@@ -270,37 +270,38 @@ const Canvas = ({
     };
 
     const newValue = {
-      x: scaled.x - offsetValues.x,
-      y: scaled.y - offsetValues.y,
+      x: scaledPoint.x - offsetValues.x,
+      y: scaledPoint.y - offsetValues.y,
     };
 
     const point: Point = {
-      x: (x - canvasPosition.left) / zoom - newValue.x - pos.left,
-      y: (y - canvasPosition.top) / zoom - newValue.y - pos.top,
+      x: scaledPoint.x - newValue.x,
+      y: scaledPoint.y - newValue.y,
     };
 
     return point;
   };
+
   // if shape container is moved or resized, now has a background image
   const checkSetAction = () => {
     if (isImagePlaced) return;
-    if (currentTool.toolGroupID === 2) {
+    if (currentTool.groupId === 2) {
       setSelection("white");
       clearCanvasArea();
-    } else if (currentTool.toolGroupID === 10) {
+    } else if (currentTool.groupId === 10) {
       setSelection("transparent");
       setLassoImage();
       clearLassoSelection();
-    } else if (currentTool.toolGroupID === 5) {
+    } else if (currentTool.groupId === 5) {
       setIrregularShape();
     }
   };
 
   const performAction = (point: Point) => {
-    switch (currentTool.toolGroupID) {
+    switch (currentTool.groupId) {
       case 1:
         paintShape();
-        setPath(currentTool.toolId);
+        setPath(currentTool.id);
         break;
 
       case 3:
@@ -804,7 +805,7 @@ const Canvas = ({
   };
 
   const setAction = () => {
-    switch (currentTool.toolGroupID) {
+    switch (currentTool.groupId) {
       case 1:
       case 2:
         drawShapeContainer();
@@ -847,9 +848,9 @@ const Canvas = ({
   const setLassoValues = () => {
     if (isImagePlaced) return;
     if (lassoPoints.length <= 0) return;
-    if (currentTool.toolGroupID === 10) {
+    if (currentTool.groupId === 10) {
       setLassoFrame("Lasso");
-    } else if (currentTool.toolGroupID === 5) {
+    } else if (currentTool.groupId === 5) {
       setLassoFrame("IrregularShape");
     }
   };

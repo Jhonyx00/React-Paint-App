@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useRef } from "react";
+import { Dispatch, SetStateAction, useEffect, useRef } from "react";
 import "./colorPalette.css";
 
 //data
@@ -21,6 +21,13 @@ const ColorPalette = ({
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setCurrentColor(event.target.value);
   };
+
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.value = "#808080";
+    }
+    setCurrentColor("#808080");
+  }, []);
 
   return (
     <div className="tool-container">

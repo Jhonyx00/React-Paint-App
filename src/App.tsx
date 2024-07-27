@@ -7,23 +7,23 @@ import Canvas from "./components/canvas/Canvas.tsx";
 import ColorPalette from "./components/colorPalette/ColorPalette.tsx";
 
 //Interfaces
-import { CurrentTool } from "./interfaces/IconTool.ts";
 import { Dimension } from "./interfaces/Dimension.ts";
 
 //Styles
 import "./App.css";
 import { Position } from "./interfaces/Position.ts";
-import { shapeItems, toolsItems, selectItems } from "./utilities/data.ts";
+import { toolItems, selectItems, iconShapes } from "./utilities/data.ts";
 import { Point } from "./interfaces/Point.ts";
 import Menu from "./components/menu/Menu.tsx";
 import ToolOptions from "./components/toolOptions/ToolOptions.tsx";
 import StatusBar from "./components/statusBar/StatusBar.tsx";
+import { ToolItem } from "./interfaces/ToolItem.ts";
 
 const App = () => {
   const canvasContainer = useRef<HTMLDivElement>(null);
   const [currentColor, setCurrentColor] = useState<string>("");
   const [selected, setSelected] = useState<boolean>(false);
-  const [lineWidth, setLineWidth] = useState<number>(1);
+  const [lineWidth, setLineWidth] = useState<number>(2);
   const [opacity, setOpacity] = useState<number>(100);
   const [shadowBlur, setShadowBlur] = useState<number>(0);
   const [isMoving, setIsMoving] = useState<boolean>(false);
@@ -43,9 +43,9 @@ const App = () => {
     height: 0,
   });
 
-  const [currentTool, setCurrentTool] = useState<CurrentTool>({
-    toolGroupID: 3,
-    toolId: 1,
+  const [currentTool, setCurrentTool] = useState<ToolItem>({
+    groupId: 3,
+    id: 1,
     name: "Line",
   });
 
@@ -130,21 +130,24 @@ const App = () => {
       <div className="toolbar-container">
         <Tool
           toolGroupName={"Shapes"}
-          toolItems={shapeItems}
           setCurrentTool={setCurrentTool}
           setSelected={setSelected}
+          currentColor={currentColor}
+          toolItems={iconShapes}
         />
         <Tool
           toolGroupName={"Tools"}
-          toolItems={toolsItems}
+          toolItems={toolItems}
           setCurrentTool={setCurrentTool}
           setSelected={setSelected}
+          currentColor={currentColor}
         />
         <Tool
           toolGroupName={"Select"}
           toolItems={selectItems}
           setCurrentTool={setCurrentTool}
           setSelected={setSelected}
+          currentColor={""}
         />
         <ColorPalette setCurrentColor={setCurrentColor} />
         <ToolOptions

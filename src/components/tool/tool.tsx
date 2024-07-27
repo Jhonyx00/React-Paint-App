@@ -1,19 +1,23 @@
 import { Dispatch, SetStateAction } from "react";
-import { CurrentTool, IconTool } from "../../interfaces/IconTool";
+import { ToolItem } from "../../interfaces/ToolItem";
 import "./tool.css";
+import Icon from "../Icon/Icon";
+import { ToolIcon } from "../../interfaces/ToolIcon";
 
 const Tool = ({
   toolGroupName,
   toolItems,
+  currentColor,
   setCurrentTool,
   setSelected,
 }: {
   toolGroupName: string;
-  toolItems: IconTool[];
-  setCurrentTool: Dispatch<SetStateAction<CurrentTool>>;
+  toolItems: ToolIcon[];
+  currentColor: string;
+  setCurrentTool: Dispatch<SetStateAction<ToolItem>>;
   setSelected: Dispatch<SetStateAction<boolean>>;
 }) => {
-  const handleClick = (tool: CurrentTool) => {
+  const handleClick = (tool: ToolItem) => {
     setCurrentTool(tool);
   };
 
@@ -29,18 +33,22 @@ const Tool = ({
         {toolGroupName} {toolGroupName === "Shapes" ? "›" : ""}
       </span>
       <div className={toolGroupName + " tool"}>
-        {toolItems.map((item: IconTool) => (
+        {toolItems.map((item: ToolIcon) => (
           <button
-            key={item.toolId}
+            key={item.id}
             onClick={() =>
               handleClick({
-                toolId: item.toolId,
+                id: item.id,
                 name: item.name,
-                toolGroupID: item.toolGroupID,
+                groupId: item.groupId,
               })
             }
           >
-            <img className="icon" src={item.icon} alt="" />
+            {item.svg ? (
+              <Icon color={currentColor} shape={item.svg} />
+            ) : (
+              <img className="icon" src={item.url} alt="" />
+            )}
           </button>
         ))}
       </div>

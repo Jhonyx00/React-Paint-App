@@ -1,19 +1,12 @@
 //interfaces
-import { IconTool } from "../interfaces/IconTool";
+
 //Images
-import oval from "../assets/oval.svg";
-import star from "../assets/star.svg";
 import pencil from "../assets/pencil.svg";
 import eraser from "../assets/eraser.svg";
-import rhombus from "../assets/rhombus.svg";
-import hexagon from "../assets/hexagon.svg";
-import triangle from "../assets/triangle.svg";
-import pentagon from "../assets/pentagon.svg";
-import rectangle from "../assets/rectangle.svg";
 import select from "../assets/select.svg";
 import LassoSelect from "../assets/free-form-select.svg";
-import irregularShape from "../assets/irregularShape.svg";
-import text from "../assets/text.svg";
+import { ToolIcon } from "../interfaces/ToolIcon";
+
 //arrays
 export const shapes = [
   { name: "Rectangle", path: "M0 0, L0 150, L300 150, L300 0 Z" },
@@ -60,90 +53,134 @@ export const colors = [
   { id: 13, color: "#f1b9b1" },
 ];
 
-export const toolsItems: IconTool[] = [
+export const toolItems: ToolIcon[] = [
   {
-    toolGroupID: 3,
-    toolId: 1,
+    groupId: 3,
+    id: 1,
     name: "Line",
-    icon: pencil,
+    url: pencil,
   },
   {
-    toolGroupID: 4,
-    toolId: 2,
+    groupId: 4,
+    id: 2,
     name: "Eraser",
-    icon: eraser,
+    url: eraser,
   },
   {
-    toolGroupID: 5,
-    toolId: 3,
+    groupId: 5,
+    id: 3,
     name: "IrregularShape",
-    icon: irregularShape,
+    svg: {
+      tagname: "path",
+      attributes: {
+        d: "M21.3, -31.1C25.9, -26.1,26.5,-17.5,29,-9.5C31.6,-1.5,36.1,5.8,35.1,12.2C34.1,18.5,27.6,23.8,20.9,29.9C14.1,36,7,43,1.1,41.4C-4.8,39.8,-9.6,29.8,-16.4,23.7C-23.2,17.6,-32,15.4,-37.5,9.6C-43,3.8,-45,-5.8,-40.4,-11C-35.8,-16.3,-24.6,-17.3,-16.7,-21.2C-8.8,-25.1,-4.4,-31.9,2,-34.6C8.4,-37.3,16.8,-36,21.3,-31.1Z",
+        transform: "translate(50 50), scale(1.2), rotate(60)",
+      },
+    },
   },
   {
-    toolGroupID: 6,
-    toolId: 4,
+    groupId: 6,
+    id: 4,
     name: "Text",
-    icon: text,
+    svg: {
+      tagname: "text",
+      attributes: {
+        x: "10",
+        y: "90",
+        fontFamily: "arial",
+        fontSize: "110",
+        content: "A",
+        fontWeight: "600",
+      },
+    },
   },
 ];
 
-export const shapeItems: IconTool[] = [
+export const selectItems: ToolIcon[] = [
   {
-    toolGroupID: 1,
-    toolId: 1,
-    name: "Rectangle",
-    icon: rectangle,
-  },
-  {
-    toolGroupID: 1,
-    toolId: 2,
-    name: "Ellipse",
-    icon: oval,
-  },
-  {
-    toolGroupID: 1,
-    toolId: 3,
-    name: "Hexagon",
-    icon: hexagon,
-  },
-  {
-    toolGroupID: 1,
-    toolId: 4,
-    name: "Triangle",
-    icon: triangle,
-  },
-  {
-    toolGroupID: 1,
-    toolId: 5,
-    name: "Pentagon",
-    icon: pentagon,
-  },
-  {
-    toolGroupID: 1,
-    toolId: 6,
-    name: "Star",
-    icon: star,
-  },
-
-  {
-    toolGroupID: 1,
-    toolId: 7,
-    name: "Rhombus",
-    icon: rhombus,
-  },
-];
-
-export const selectItems: IconTool[] = [
-  {
-    toolGroupID: 2,
-    toolId: 1,
+    groupId: 2,
+    id: 1,
     name: "Select",
-    icon: select,
+    url: select,
   },
   {
-    toolGroupID: 10,
-    toolId: 2,
+    groupId: 10,
+    id: 2,
     name: "Lasso",
-    icon: LassoSelect,
+    url: LassoSelect,
+  },
+];
+
+export const iconShapes: ToolIcon[] = [
+  {
+    groupId: 1,
+    id: 1,
+    name: "Rectangle",
+    svg: {
+      tagname: "polygon",
+      attributes: { points: "0 0, 100 0, 100 100, 0 100" },
+    },
+  },
+
+  {
+    groupId: 1,
+    id: 2,
+    name: "Ellipse",
+    svg: {
+      tagname: "ellipse",
+      attributes: { cx: "50", cy: "50", rx: "50", ry: "40" },
+    },
+  },
+  {
+    groupId: 1,
+    id: 3,
+    name: "Hexagon",
+    svg: {
+      tagname: "polygon",
+      attributes: { points: "25,0 75,0 100,50 75,100 25,100 0,50" },
+    },
+  },
+
+  {
+    groupId: 1,
+    id: 4,
+    name: "Triangle",
+    svg: {
+      tagname: "polygon",
+      attributes: { points: "50,0 0,100 100,100" },
+    },
+  },
+
+  {
+    groupId: 1,
+    id: 5,
+    name: "Pentagon",
+    svg: {
+      tagname: "polygon",
+      attributes: { points: "50,0 0,38 18,100 82,100 100,38" },
+    },
+  },
+
+  {
+    groupId: 1,
+    id: 6,
+    name: "Star",
+    svg: {
+      tagname: "polygon",
+      attributes: {
+        points:
+          "50 0, 63 38, 100 38, 69 59, 82 100, 50 75, 18 100, 31 59, 0 38, 37 38",
+      },
+    },
+  },
+
+  {
+    groupId: 1,
+    id: 7,
+    name: "Rhombus",
+    svg: {
+      tagname: "polygon",
+      attributes: { points: "50,0 0,50 50,100 100,50" },
+    },
   },
 ];
