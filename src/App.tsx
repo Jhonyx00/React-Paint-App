@@ -132,11 +132,16 @@ const App = () => {
       height: mainCanvasContainerRef.current.clientHeight,
     });
     // first zoom origin is center of canvas
-    setZoomOrigin({
-      left: mainCanvasContainerRef.current.clientWidth / 2 / ZOOM_STEP,
-      top: mainCanvasContainerRef.current.clientHeight / 2 / ZOOM_STEP,
-    });
+    setInitialZoomOrigin();
   }, []);
+
+  const setInitialZoomOrigin = () => {
+    if (mainCanvasContainerRef.current)
+      setZoomOrigin({
+        left: mainCanvasContainerRef.current.clientWidth / 2 / ZOOM_STEP,
+        top: mainCanvasContainerRef.current.clientHeight / 2 / ZOOM_STEP,
+      });
+  };
 
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!e.ctrlKey) return;
@@ -190,8 +195,8 @@ const App = () => {
       setZoomFactor(100);
     }
     //reset zoom origin
-    if (zoomOrigin) {
-      setZoomOrigin({ left: 0, top: 0 });
+    if (zoomOrigin.left) {
+      setInitialZoomOrigin();
     }
   };
 

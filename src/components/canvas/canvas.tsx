@@ -1071,17 +1071,15 @@ const Canvas = ({
         transform: `translate(${elementPosition.left}px, ${elementPosition.top}px) `,
         width: `${zoomFactor * 100}%`,
         height: `${zoomFactor * 100}%`,
-        // transition: transition
-        //   ? "transform 400ms ease-in-out, width 400ms ease-in-out, height 400ms ease-in-out"
-        //   : "width 400ms ease-in-out, height 400ms ease-in-out",
+        transition: transition ? "transform 400ms ease-in-out" : "",
       }}
     >
       <ShapePanel
         dimension={{
-          top: shapeContainer.top,
-          left: shapeContainer.left,
-          width: shapeContainer.width,
-          height: shapeContainer.height,
+          top: shapeContainer.top * zoomFactor,
+          left: shapeContainer.left * zoomFactor,
+          width: shapeContainer.width * zoomFactor,
+          height: shapeContainer.height * zoomFactor,
         }}
         canvasRef={auxCanvas}
         buttonsRef={buttons}
