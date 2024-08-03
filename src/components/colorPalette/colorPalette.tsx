@@ -2,7 +2,7 @@ import { Dispatch, SetStateAction, useEffect, useRef } from "react";
 import "./colorPalette.css";
 
 //data
-import { colors } from "../../utilities/data";
+import { colors } from "../../data/data";
 
 const ColorPalette = ({
   setCurrentColor,

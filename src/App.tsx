@@ -9,9 +9,9 @@ import StatusBar from "./components/statusBar/StatusBar.tsx";
 import ToolOptions from "./components/toolOptions/ToolOptions.tsx";
 import ColorPalette from "./components/colorPalette/ColorPalette.tsx";
 
+import getScaledPoint from "./utils/getScaledPoint.ts";
 //Interfaces
 import { Point } from "./interfaces/Point.ts";
-import { Position } from "./interfaces/Position.ts";
 import { ToolItem } from "./interfaces/ToolItem.ts";
 import { Dimension } from "./interfaces/Dimension.ts";
 
@@ -19,27 +19,28 @@ import { Dimension } from "./interfaces/Dimension.ts";
 import "./App.css";
 
 //Data
-import { toolItems, selectItems, iconShapes } from "./utilities/data.ts";
+import { toolItems, selectItems, iconShapes } from "./data/data.ts";
+import { Position } from "./interfaces/Position.ts";
 
+// const zoomStep = 40;
+import { ZOOM_STEP } from "./constants/canvasConfig.ts";
 const App = () => {
-  const canvasContainer = useRef<HTMLDivElement>(null);
+  //Refs
+  const canvasContainerRef = useRef<HTMLDivElement>(null);
+  const mainCanvasContainerRef = useRef<HTMLDivElement>(null);
+
+  //state
   const [currentColor, setCurrentColor] = useState<string>("");
   const [selected, setSelected] = useState<boolean>(false);
   const [lineWidth, setLineWidth] = useState<number>(2);
   const [opacity, setOpacity] = useState<number>(100);
   const [shadowBlur, setShadowBlur] = useState<number>(0);
   const [isMoving, setIsMoving] = useState<boolean>(false);
-  const movingContainer = useRef<HTMLDivElement>(null);
   const [XY, setXY] = useState<Point>({ x: 0, y: 0 });
-  const [pos, setPos] = useState({ left: 0, top: 0 });
+  const [elementPosition, setElementPosition] = useState({ left: 0, top: 0 });
+
   const [transition, setTransition] = useState<boolean>(false);
-
-  const [scaleValue, setScaleValue] = useState<number>(100);
-  const [canvasPosition, setCanvasPosition] = useState<Position>({
-    left: 0,
-    top: 0,
-  });
-
+  const [zoomFactor, setZoomFactor] = useState<number>(100);
   const [parentSize, setParentSize] = useState<Dimension>({
     width: 0,
     height: 0,
@@ -56,61 +57,122 @@ const App = () => {
     y: 0,
   });
 
-  useEffect(() => {
-    if (canvasContainer.current) {
-      setParentSize({
-        width: canvasContainer.current.clientWidth,
-        height: canvasContainer.current.clientHeight,
-      });
+  const [zoomOrigin, setZoomOrigin] = useState<Position>({
+    left: 0,
+    top: 0,
+  });
 
-      setCanvasPosition({
-        left: canvasContainer.current.getBoundingClientRect().left,
-        top: canvasContainer.current.getBoundingClientRect().top,
-      });
-    }
-    const handleWheel = (event: WheelEvent) => {
-      if (event.ctrlKey) {
-        event.preventDefault();
+  const [key, setKey] = useState<string>("");
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const key = e.key;
+      const zoomControlKey = key === "+" || key === "-" || key === "=";
+      if (e.ctrlKey && zoomControlKey) {
+        e.preventDefault();
+        setKey(key);
+        performKeyAction(key);
       }
     };
-    const handleKeyDown = (event: KeyboardEvent) => {
-      const key = event.key;
-      if (event.ctrlKey && (key === "+" || key === "-" || key === "=")) {
-        event.preventDefault();
+
+    const performKeyAction = (key: string) => {
+      if (key === "-") {
+        // increase zoom
+        setZoomFactor((prev) => prev - ZOOM_STEP);
+        // set new element position based on new zoom origin
+        setElementPosition((prev) => ({
+          left: prev.left + zoomOrigin.left,
+          top: prev.top + zoomOrigin.top,
+        }));
+      } else {
+        setZoomFactor((prev) => prev + ZOOM_STEP);
+        setElementPosition((prev) => ({
+          left: prev.left - zoomOrigin.left,
+          top: prev.top - zoomOrigin.top,
+        }));
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [zoomOrigin, key]);
+
+  useEffect(() => {
+    const handleWheel = (e: WheelEvent) => {
+      if (e.ctrlKey) {
+        e.preventDefault();
       }
     };
     window.addEventListener("wheel", handleWheel, { passive: false });
-    window.addEventListener("keydown", handleKeyDown);
     return () => {
       window.removeEventListener("wheel", handleWheel);
-      window.removeEventListener("keydown", handleKeyDown);
     };
+  }, []);
+
+  const calculateZoomOrigin = () => {
+    const halfWidth = parentSize.width / 2;
+    const halfHeight = parentSize.height / 2;
+    const viewportCenterX = halfWidth - elementPosition.left;
+    const viewportCenterY = halfHeight - elementPosition.top;
+    const leftDiff = viewportCenterX / zoomFactor;
+    const topDiff = viewportCenterY / zoomFactor;
+    const newLeft = leftDiff * ZOOM_STEP;
+    const newTop = topDiff * ZOOM_STEP;
+    setZoomOrigin({ left: newLeft, top: newTop });
+  };
+
+  // init component
+  useEffect(() => {
+    if (!mainCanvasContainerRef.current) return;
+    // initial size
+    setParentSize({
+      width: mainCanvasContainerRef.current.clientWidth,
+      height: mainCanvasContainerRef.current.clientHeight,
+    });
+    // first zoom origin is center of canvas
+    setZoomOrigin({
+      left: mainCanvasContainerRef.current.clientWidth / 2 / ZOOM_STEP,
+      top: mainCanvasContainerRef.current.clientHeight / 2 / ZOOM_STEP,
+    });
   }, []);
 
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!e.ctrlKey) return;
-
     if (transition) setTransition(false);
-
     setIsMoving(true);
     setXY({
-      x: e.clientX - pos.left,
-      y: e.clientY - pos.top,
+      x: e.clientX - elementPosition.left,
+      y: e.clientY - elementPosition.top,
     });
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.target !== canvasContainer.current) {
+    const point = { x: e.clientX, y: e.clientY };
+    //on canvas container
+    if (e.target !== mainCanvasContainerRef.current) {
+      if (!canvasContainerRef.current) return;
+      const { left, top } = canvasContainerRef.current.getBoundingClientRect();
+
+      const scaledPoint = getScaledPoint(point, zoomFactor / 100, {
+        left,
+        top,
+      });
+
       setCursorPosition({
-        x: e.nativeEvent.clientX - canvasPosition.left,
-        y: e.nativeEvent.clientY - canvasPosition.top,
+        x: Math.round(scaledPoint.x),
+        y: Math.round(scaledPoint.y),
       });
     }
-    if (!isMoving) return;
-    setPos({
-      left: e.clientX - XY.x,
-      top: e.clientY - XY.y,
-    });
+    // on main-canvas-container (move from any mouse position inside main canvas container)
+    if (isMoving) {
+      setElementPosition({
+        left: point.x - XY.x,
+        top: point.y - XY.y,
+      });
+      calculateZoomOrigin();
+    }
   };
 
   const handleMouseUp = () => {
@@ -118,12 +180,18 @@ const App = () => {
   };
 
   const handleDblClick = () => {
-    if (pos.left || pos.top) {
+    //reset canvas position
+    if (elementPosition.left || elementPosition.top) {
       setTransition(true);
-      setPos({ left: 0, top: 0 });
+      setElementPosition({ left: 0, top: 0 });
     }
-    if (scaleValue !== 100) {
-      setScaleValue(100);
+    //reset zoom
+    if (zoomFactor !== 100) {
+      setZoomFactor(100);
+    }
+    //reset zoom origin
+    if (zoomOrigin) {
+      setZoomOrigin({ left: 0, top: 0 });
     }
   };
 
@@ -149,7 +217,6 @@ const App = () => {
           toolItems={selectItems}
           setCurrentTool={setCurrentTool}
           setSelected={setSelected}
-          currentColor={""}
         />
         <ColorPalette setCurrentColor={setCurrentColor} />
         <ToolOptions
@@ -163,8 +230,8 @@ const App = () => {
       </div>
       <div className="canvas-statusbar-container">
         <div
-          ref={canvasContainer}
-          className="canvas-main-container"
+          ref={mainCanvasContainerRef}
+          className="main-canvas-container"
           onMouseMove={handleMouseMove}
           onMouseDown={handleMouseDown}
           onMouseUp={handleMouseUp}
@@ -174,35 +241,28 @@ const App = () => {
           }}
         >
           {selected && <Menu />}
-          <div
-            className="moving-container"
-            ref={movingContainer}
-            style={{
-              transform: `translate(${pos.left}px, ${pos.top}px)`,
-              transition: transition ? "transform 400ms ease" : "",
-            }}
-          >
-            <Canvas
-              parentSize={parentSize}
-              currentTool={currentTool}
-              currentColor={currentColor}
-              canvasPosition={canvasPosition}
-              lineWidth={lineWidth}
-              opacity={opacity / 100}
-              shadowBlur={shadowBlur}
-              setSelected={setSelected}
-              pos={pos}
-              zoom={scaleValue / 100}
-            />
-          </div>
+
+          <Canvas
+            canvasContainerRef={canvasContainerRef}
+            parentSize={parentSize}
+            currentTool={currentTool}
+            currentColor={currentColor}
+            lineWidth={lineWidth}
+            opacity={opacity / 100}
+            shadowBlur={shadowBlur}
+            elementPosition={elementPosition}
+            zoomFactor={zoomFactor / 100}
+            transition={transition}
+            setSelected={setSelected}
+          />
         </div>
 
         <StatusBar
           parentSize={parentSize}
           cursorPosition={cursorPosition}
           currentTool={currentTool.name}
-          scaleValue={scaleValue}
-          setScaleValue={setScaleValue}
+          scaleValue={zoomFactor}
+          setScaleValue={setZoomFactor}
         />
       </div>
     </div>

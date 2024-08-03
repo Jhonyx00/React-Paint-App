@@ -1,5 +1,6 @@
 import React, {
   Dispatch,
+  RefObject,
   SetStateAction,
   useEffect,
   useRef,
@@ -11,7 +12,7 @@ import { Point } from "../../interfaces/Point";
 import { ShapeContainer } from "../../interfaces/ShapeContainer";
 
 //data
-import { shapes } from "../../utilities/data";
+import { shapes } from "../../data/data";
 
 //styles
 import "./canvas.css";
@@ -19,35 +20,37 @@ import { Position } from "../../interfaces/Position";
 import ShapePanel from "../shapePanel/ShapePanel";
 import { Dimension } from "../../interfaces/Dimension";
 import { ToolItem } from "../../interfaces/ToolItem";
+import getScaledPoint from "../../utils/getScaledPoint";
 
 const Canvas = ({
   parentSize,
   currentTool,
   currentColor,
-  canvasPosition,
   lineWidth,
   opacity,
   shadowBlur,
-  pos,
-  zoom,
+  elementPosition,
+  zoomFactor,
+  canvasContainerRef,
+  transition,
   setSelected,
 }: {
   parentSize: Dimension;
   currentTool: ToolItem;
   currentColor: string;
-  canvasPosition: Position;
   lineWidth: number;
   opacity: number;
   shadowBlur: number;
-  pos: Position;
-  zoom: number;
+  elementPosition: Position;
+  zoomFactor: number;
+  transition: boolean;
+  canvasContainerRef: RefObject<HTMLDivElement>;
   setSelected: Dispatch<SetStateAction<boolean>>;
 }) => {
   //refs
   const buttons = useRef<HTMLDivElement>(null);
   const mainCanvas = useRef<HTMLCanvasElement>(null);
   const auxCanvas = useRef<HTMLCanvasElement>(null);
-  const canvasContainer = useRef<HTMLDivElement>(null);
   //useState
   const [XY, setXY] = useState<Point>({ x: 0, y: 0 });
   const [shapePath, setShapePath] = useState<Path2D>(new Path2D());
@@ -123,11 +126,11 @@ const Canvas = ({
     mainCtxRef.current.globalAlpha = opacity;
     mainCtxRef.current.strokeStyle = currentColor;
     mainCtxRef.current.fillStyle = currentColor;
-    mainCtxRef.current.lineWidth = lineWidth / zoom;
+    mainCtxRef.current.lineWidth = lineWidth / zoomFactor;
     mainCtxRef.current.shadowBlur = shadowBlur;
     mainCtxRef.current.shadowColor = currentColor;
     mainCtxRef.current.lineCap = "round";
-  }, [opacity, currentColor, lineWidth, shadowBlur, zoom]);
+  }, [opacity, currentColor, lineWidth, shadowBlur, zoomFactor]);
 
   //Aux canvas init
   useEffect(() => {
@@ -146,12 +149,6 @@ const Canvas = ({
     auxCtxRef.current.globalAlpha = opacity;
   }, [opacity, shadowBlur, currentColor]);
 
-  //ZOOM
-  useEffect(() => {
-    if (canvasContainer.current)
-      canvasContainer.current.style.scale = `${zoom}`;
-  }, [zoom]);
-
   useEffect(() => {
     setShapeContainer((prev) => ({ ...prev, background: currentColor }));
   }, [currentColor]);
@@ -163,7 +160,8 @@ const Canvas = ({
 
     if (!mainCanvas.current) return;
     const { left, top } = mainCanvas.current.getBoundingClientRect();
-    const scaledPoint = getScaledPoint(event.clientX, event.clientY, {
+    const point = { x: event.clientX, y: event.clientY };
+    const scaledPoint = getScaledPoint(point, zoomFactor, {
       left,
       top,
     });
@@ -203,7 +201,8 @@ const Canvas = ({
 
     if (!mainCanvas.current) return;
     const { left, top } = mainCanvas.current.getBoundingClientRect();
-    const scaledPoint = getScaledPoint(event.clientX, event.clientY, {
+    const point = { x: event.clientX, y: event.clientY };
+    const scaledPoint = getScaledPoint(point, zoomFactor, {
       left,
       top,
     });
@@ -252,34 +251,6 @@ const Canvas = ({
       default:
         break;
     }
-  };
-
-  const getScaledPoint = (
-    x: number,
-    y: number,
-    canvasBounding: Position
-  ): Point => {
-    const scaledPoint = {
-      x: (x - canvasPosition.left) / zoom - pos.left,
-      y: (y - canvasPosition.top) / zoom - pos.top,
-    };
-
-    const offsetValues = {
-      x: x / zoom - canvasBounding.left / zoom,
-      y: y / zoom - canvasBounding.top / zoom,
-    };
-
-    const newValue = {
-      x: scaledPoint.x - offsetValues.x,
-      y: scaledPoint.y - offsetValues.y,
-    };
-
-    const point: Point = {
-      x: scaledPoint.x - newValue.x,
-      y: scaledPoint.y - newValue.y,
-    };
-
-    return point;
   };
 
   // if shape container is moved or resized, now has a background image
@@ -411,10 +382,16 @@ const Canvas = ({
   const drawLine = (): void => {
     if (!mainCtxRef.current) return;
     mainCtxRef.current.save();
-    mainCtxRef.current.scale(zoom, zoom);
+    mainCtxRef.current.scale(zoomFactor, zoomFactor);
     mainCtxRef.current.beginPath();
-    mainCtxRef.current.moveTo(positionDown.x / zoom, positionDown.y / zoom);
-    mainCtxRef.current.lineTo(positionMove.x / zoom, positionMove.y / zoom);
+    mainCtxRef.current.moveTo(
+      positionDown.x / zoomFactor,
+      positionDown.y / zoomFactor
+    );
+    mainCtxRef.current.lineTo(
+      positionMove.x / zoomFactor,
+      positionMove.y / zoomFactor
+    );
     mainCtxRef.current.stroke();
     mainCtxRef.current.restore();
     positionDown.x = positionMove.x;
@@ -1089,7 +1066,15 @@ const Canvas = ({
       onPointerDown={handleMouseDown}
       onPointerMove={handleMouseMove}
       onPointerUp={handleMouseUp}
-      ref={canvasContainer}
+      ref={canvasContainerRef}
+      style={{
+        transform: `translate(${elementPosition.left}px, ${elementPosition.top}px) `,
+        width: `${zoomFactor * 100}%`,
+        height: `${zoomFactor * 100}%`,
+        // transition: transition
+        //   ? "transform 400ms ease-in-out, width 400ms ease-in-out, height 400ms ease-in-out"
+        //   : "width 400ms ease-in-out, height 400ms ease-in-out",
+      }}
     >
       <ShapePanel
         dimension={{

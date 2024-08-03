@@ -1,22 +1,36 @@
 .toolbar-canvas-container {
-  display: grid;
-  grid-template-columns: 130px calc(100% - 130px);
-
+  display: flex;
+  flex-direction: row;
   .toolbar-container {
     background-color: rgb(232, 232, 232);
-    /* check this background */
+    width: 130px;
   }
 
   .canvas-statusbar-container {
     width: 100%;
     height: 100%;
-    display: grid;
-    grid-template-rows: 95vh 5vh;
 
-    .canvas-main-container {
+    display: grid;
+    grid-template-rows: 96vh 4vh;
+
+    .main-canvas-container {
       overflow: hidden;
       position: relative;
       background-color: rgb(42, 73, 141);
+      /* display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center; */
+
+      /* .moving-container {
+        background-color: violet;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+      } */
     }
   }
 }

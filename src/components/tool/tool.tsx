@@ -13,7 +13,7 @@ const Tool = ({
 }: {
   toolGroupName: string;
   toolItems: ToolIcon[];
-  currentColor: string;
+  currentColor?: string;
   setCurrentTool: Dispatch<SetStateAction<ToolItem>>;
   setSelected: Dispatch<SetStateAction<boolean>>;
 }) => {
@@ -44,7 +44,7 @@ const Tool = ({
               })
             }
           >
-            {item.svg ? (
+            {item.svg && currentColor ? (
               <Icon color={currentColor} shape={item.svg} />
             ) : (
               <img className="icon" src={item.url} alt="" />
