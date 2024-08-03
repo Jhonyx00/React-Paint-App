@@ -46,18 +46,7 @@ const ToolOptions = ({
           value={lineWidth}
         />
       </div>
-      <div className="option">
-        <span>
-          Opacity <b>{opacity}%</b>
-        </span>
-        <input
-          type="range"
-          min={1}
-          max={100}
-          onChange={handleOpaictyChange}
-          value={opacity}
-        />
-      </div>
+
       <div className="option">
         <span>
           Shadow blur <b>{shadowBlur}</b>
@@ -68,6 +57,18 @@ const ToolOptions = ({
           max={100}
           onChange={handleShadowBlurChange}
           value={shadowBlur}
+        />
+      </div>
+      <div className="option">
+        <span>
+          Opacity <b>{opacity}%</b>
+        </span>
+        <input
+          type="range"
+          min={1}
+          max={100}
+          onChange={handleOpaictyChange}
+          value={opacity}
         />
       </div>
     </div>

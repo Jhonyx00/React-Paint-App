@@ -3,40 +3,67 @@
   flex-direction: row;
   justify-content: center;
   align-items: center;
-
-  background-color: rgb(210, 210, 210);
+  background-color: rgb(255, 255, 255);
+  border-top: 1px solid lightgray;
 
   gap: 0.4em;
-  span {
-    font-size: 0.8em;
-    padding: 0.2em 0.6em;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: white;
-    border-radius: 0.4em;
-    color: gray;
-  }
 
-  .zoom,
   .text {
     display: flex;
     flex-direction: row;
-    /* height: max-content; */
     gap: 0.4em;
+    .dimension,
+    .position,
+    .current-tool {
+      font-size: 0.8em;
+      padding: 0.2em 0.6em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: gray;
+      border: 1px solid lightgray;
+      border-radius: 0.4em;
+    }
+    /* span:nth-child(2) {
+      border-left: 2px solid lightgray;
+      border-right: 2px solid lightgray;
+    } */
   }
 
   .zoom {
-    input[type="range"] {
-      accent-color: rgb(26, 111, 222);
-      cursor: pointer;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+
+    button {
+      padding: 0.2em 0.6em;
+      color: gray;
+      font-size: 0.8em;
+      background-color: white;
+      border: 1px solid lightgray;
+      font-weight: bold;
+      &:hover {
+        cursor: pointer;
+      }
+      &:nth-child(1) {
+        border-radius: 0.4em 0em 0em 0.4em;
+      }
+      &:nth-child(3) {
+        border-radius: 0em 0.4em 0.4em 0em;
+      }
+    }
+
+    span.scale-value {
+      font-size: 0.8em;
+      padding: 0.2em 0.6em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: white;
+      border-top: 1px solid lightgray;
+      border-bottom: 1px solid lightgray;
+      color: gray;
     }
   }
-
-  /* .text {
-    span:nth-child(2) {
-      border-left: 2px solid rgb(164, 164, 164);
-      border-right: 2px solid rgb(164, 164, 164);
-    }
-  } */
 }

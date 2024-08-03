@@ -1068,9 +1068,9 @@ const Canvas = ({
       onPointerUp={handleMouseUp}
       ref={canvasContainerRef}
       style={{
-        transform: `translate(${elementPosition.left}px, ${elementPosition.top}px) `,
-        width: `${zoomFactor * 100}%`,
-        height: `${zoomFactor * 100}%`,
+        transform: `translate(${elementPosition.left}px, ${elementPosition.top}px) translateZ(0)`,
+        width: `${zoomFactor * parentSize.width}px`,
+        height: `${zoomFactor * parentSize.height}px`,
         transition: transition ? "transform 400ms ease-in-out" : "",
       }}
     >

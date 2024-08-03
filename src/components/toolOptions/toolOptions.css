@@ -1,8 +1,8 @@
 .tool-options {
   background-color: white;
-  padding: 0.4em;
+  padding: 0.6em;
   margin: 0.4em;
-  /* border: 2px solid lightgray; */
+  border: 1px solid lightgray;
   display: flex;
   flex-direction: column;
   border-radius: 0.6em;

@@ -2,8 +2,9 @@
   display: flex;
   flex-direction: row;
   .toolbar-container {
-    background-color: rgb(232, 232, 232);
+    background-color: rgb(244, 244, 244);
     width: 130px;
+    /* border: 2px solid rgb(230, 230, 230); */
   }
 
   .canvas-statusbar-container {
@@ -11,7 +12,7 @@
     height: 100%;
 
     display: grid;
-    grid-template-rows: 96vh 4vh;
+    grid-template-rows: 95vh 5vh;
 
     .main-canvas-container {
       overflow: hidden;
