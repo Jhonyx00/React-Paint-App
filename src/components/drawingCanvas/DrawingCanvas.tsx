@@ -22,6 +22,7 @@ import { ToolItem } from "../../interfaces/ToolItem";
 import getScaledPoint from "../../utils/getScaledPoint";
 
 //components
+import Cursor from "../cursor/Cursor";
 import Canvas from "../canvas/Canvas";
 
 //style
@@ -1119,6 +1120,18 @@ const DrawingCanvas = ({
       }}
     >
       <Canvas canvasRef={mainCanvas} size={parentSize} />
+
+      {isOverCanvas && currentTool.groupId === 3 && (
+        <Cursor
+          left={positionMove.x * zoomFactor - (lineWidth * zoomFactor) / 2}
+          top={positionMove.y * zoomFactor - (lineWidth * zoomFactor) / 2}
+          width={lineWidth * zoomFactor}
+          height={lineWidth * zoomFactor}
+          color={currentColor}
+          blur={shadowBlur}
+          opacity={opacity}
+        />
+      )}
 
       <ElementBuilder
         canvasRef={auxCanvas}
