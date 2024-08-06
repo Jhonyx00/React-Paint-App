@@ -1,0 +1,5 @@
+.drawing-canvas {
+  overflow: hidden;
+  position: absolute;
+  background-color: white;
+}

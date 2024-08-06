@@ -1,29 +1,19 @@
-.shape-container {
+.element-container {
   position: absolute;
-  inset: 0;
   cursor: move;
 
   .btn-container {
-    position: relative;
     width: 100%;
     height: 100%;
-    inset: 0;
-    .aux-canvas {
-      width: 100%;
-      height: 100%;
-      position: absolute;
-      inset: 0;
-      image-rendering: pixelated;
-    }
+    display: flex;
 
     .buttons {
-      --position-unit: -0.1px;
+      --position-unit: -1px;
       position: absolute;
       width: 100%;
       height: 100%;
-
-      outline: 2px dashed black;
-      box-shadow: 0px 0px 0px 2px white;
+      outline: 1px dashed black;
+      box-shadow: 0px 0px 0px 1px rgb(255, 255, 255);
 
       button {
         width: 2em;
@@ -41,10 +31,11 @@
       .btn7::after,
       .btn8::after {
         content: "";
-        width: 20%;
-        height: 20%;
-        background-color: gray;
+        width: 18%;
+        height: 18%;
+        border: 1px solid black;
         position: absolute;
+        background-color: rgb(255, 255, 255);
       }
 
       .btn1 {
@@ -136,5 +127,19 @@
         transform: translateX(-50%);
       }
     }
+  }
+
+  textarea {
+    background-color: rgb(255, 255, 255);
+    position: absolute;
+    /* backdrop-filter: blur(1em); */
+    inset: 0;
+    z-index: 1;
+    /* margin: 0.4em; */
+    outline: none;
+    resize: none;
+    /* font-size: 16px; */
+    scrollbar-width: thin;
+    font-family: Arial, Helvetica, sans-serif;
   }
 }

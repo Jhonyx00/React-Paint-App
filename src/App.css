@@ -1,20 +1,19 @@
-.toolbar-canvas-container {
+.app {
   display: flex;
   flex-direction: row;
-  .toolbar-container {
+
+  .toolbar {
     background-color: rgb(244, 244, 244);
     width: 130px;
-    /* border: 2px solid rgb(230, 230, 230); */
   }
 
-  .canvas-statusbar-container {
+  .main-content {
     width: 100%;
     height: 100%;
-
     display: grid;
-    grid-template-rows: 95vh 5vh;
+    grid-template-rows: 96vh 4vh;
 
-    .main-canvas-container {
+    .drawing-panel {
       overflow: hidden;
       position: relative;
       background-color: rgb(42, 73, 141);

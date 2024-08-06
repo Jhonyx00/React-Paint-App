@@ -1,69 +1,60 @@
 .status-bar {
   display: flex;
   flex-direction: row;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
-  background-color: rgb(255, 255, 255);
-  border-top: 1px solid lightgray;
-
+  background-color: rgb(229, 229, 229);
   gap: 0.4em;
 
   .text {
+    padding: 0 0.6em;
     display: flex;
     flex-direction: row;
-    gap: 0.4em;
+    justify-content: center;
+    align-items: center;
+    gap: 0.6em;
+
     .dimension,
     .position,
     .current-tool {
       font-size: 0.8em;
-      padding: 0.2em 0.6em;
       display: flex;
       align-items: center;
       justify-content: center;
       color: gray;
-      border: 1px solid lightgray;
-      border-radius: 0.4em;
     }
-    /* span:nth-child(2) {
-      border-left: 2px solid lightgray;
-      border-right: 2px solid lightgray;
-    } */
   }
 
   .zoom {
+    padding: 0 0.6em;
     display: flex;
     flex-direction: row;
-    align-items: center;
     justify-content: center;
+    align-items: center;
+    gap: 0.6em;
 
     button {
-      padding: 0.2em 0.6em;
+      width: 1.6em;
+      height: 1.6em;
       color: gray;
       font-size: 0.8em;
-      background-color: white;
-      border: 1px solid lightgray;
+      background-color: rgb(255, 255, 255);
+      border: 1px solid gray;
       font-weight: bold;
+      border-radius: 50%;
+
       &:hover {
         cursor: pointer;
-      }
-      &:nth-child(1) {
-        border-radius: 0.4em 0em 0em 0.4em;
-      }
-      &:nth-child(3) {
-        border-radius: 0em 0.4em 0.4em 0em;
       }
     }
 
     span.scale-value {
       font-size: 0.8em;
-      padding: 0.2em 0.6em;
       display: flex;
       align-items: center;
       justify-content: center;
-      background-color: white;
-      border-top: 1px solid lightgray;
-      border-bottom: 1px solid lightgray;
       color: gray;
+      font-weight: bold;
     }
   }
 }

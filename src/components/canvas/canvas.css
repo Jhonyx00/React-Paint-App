@@ -1,9 +1,5 @@
-.canvas-container {
-  overflow: hidden;
-  .canvas {
-    width: inherit;
-    height: inherit;
-    background-color: white;
-    image-rendering: pixelated;
-  }
+.canvas {
+  width: inherit;
+  height: inherit;
+  image-rendering: pixelated;
 }

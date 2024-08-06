@@ -1,4 +1,4 @@
-export interface ShapeContainer {
+export interface ElementContainer {
   top: number;
   left: number;
   width: number;
