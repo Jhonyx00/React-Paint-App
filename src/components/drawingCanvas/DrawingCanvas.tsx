@@ -745,14 +745,13 @@ const DrawingCanvas = ({
 
   const clearLassoSelection = () => {
     const { left, top } = elementContainer;
-    if (!selectionImage) return;
     selectionImage.onload = () => {
       if (!mainCtxRef.current) return;
       mainCtxRef.current.translate(left, top);
-      mainCtxRef.current.fillStyle = "white";
-      mainCtxRef.current.globalAlpha = 1;
-      if (!shapePath) return;
-      mainCtxRef.current.fill(shapePath);
+      mainCtxRef.current.save();
+      mainCtxRef.current.clip(shapePath);
+      mainCtxRef.current.clearRect(0, 0, parentSize.width, parentSize.height);
+      mainCtxRef.current.restore();
       mainCtxRef.current.setTransform(1, 0, 0, 1, 0, 0);
     };
   };
