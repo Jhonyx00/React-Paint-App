@@ -750,7 +750,12 @@ const DrawingCanvas = ({
       mainCtxRef.current.translate(left, top);
       mainCtxRef.current.save();
       mainCtxRef.current.clip(shapePath);
-      mainCtxRef.current.clearRect(0, 0, parentSize.width, parentSize.height);
+      mainCtxRef.current.clearRect(
+        0,
+        0,
+        elementContainer.width,
+        elementContainer.height
+      );
       mainCtxRef.current.restore();
       mainCtxRef.current.setTransform(1, 0, 0, 1, 0, 0);
     };
