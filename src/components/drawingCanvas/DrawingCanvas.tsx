@@ -680,8 +680,8 @@ const DrawingCanvas = ({
 
   const erase = () => {
     mainCtxRef.current?.clearRect(
-      positionMove.x,
-      positionMove.y,
+      positionMove.x - lineWidth / 2,
+      positionMove.y - lineWidth / 2,
       lineWidth,
       lineWidth
     );
