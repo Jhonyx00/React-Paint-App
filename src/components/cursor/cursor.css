@@ -3,7 +3,10 @@
   animation-duration: 400ms;
   animation-fill-mode: forwards;
   transform: scale(0);
+  border: 1.4px solid white;
+  outline: 1.4px solid black;
 }
+
 @keyframes grow {
   0% {
     transform: scale(0);

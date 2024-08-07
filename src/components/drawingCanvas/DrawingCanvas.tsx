@@ -222,7 +222,7 @@ const DrawingCanvas = ({
 
     switch (pointerState) {
       case "onCanvas":
-        setAction();
+        setMouseMoveAction();
         break;
 
       case "onElementContainer":
@@ -249,6 +249,12 @@ const DrawingCanvas = ({
       case 2:
         setSelectionImageValues();
         resetElementContainerRefProps();
+        break;
+
+      case 4:
+        if (mainCtxRef.current) {
+          mainCtxRef.current.globalCompositeOperation = "source-over";
+        }
         break;
 
       case 5:
@@ -312,6 +318,12 @@ const DrawingCanvas = ({
         drawSelection();
         resetSelection();
         setAuxCanvasBg("transparent");
+        break;
+
+      case 4:
+        if (mainCtxRef.current) {
+          mainCtxRef.current.globalCompositeOperation = "destination-out";
+        }
         break;
 
       case 5:
@@ -678,15 +690,6 @@ const DrawingCanvas = ({
     }
   };
 
-  const erase = () => {
-    mainCtxRef.current?.clearRect(
-      positionMove.x - lineWidth / 2,
-      positionMove.y - lineWidth / 2,
-      lineWidth,
-      lineWidth
-    );
-  };
-
   const drawLassoImage = () => {
     const { left, top, width, height } = elementContainer;
     mainCtxRef.current?.drawImage(selectionImage, left, top, width, height);
@@ -826,7 +829,7 @@ const DrawingCanvas = ({
     setSelectionImage(img);
   };
 
-  const setAction = () => {
+  const setMouseMoveAction = () => {
     switch (currentTool.groupId) {
       case 1:
       case 2:
@@ -834,11 +837,10 @@ const DrawingCanvas = ({
         drawElementContainer();
         break;
       case 3:
+      case 4:
         drawLine();
         break;
-      case 4:
-        erase();
-        break;
+
       case 5:
       case 10:
         drawLasso();
@@ -1125,17 +1127,15 @@ const DrawingCanvas = ({
     >
       <Canvas canvasRef={mainCanvas} size={parentSize} />
 
-      {isOverCanvas && currentTool.groupId === 3 && (
-        <Cursor
-          left={positionMove.x * zoomFactor - (lineWidth * zoomFactor) / 2}
-          top={positionMove.y * zoomFactor - (lineWidth * zoomFactor) / 2}
-          width={lineWidth * zoomFactor}
-          height={lineWidth * zoomFactor}
-          color={currentColor}
-          blur={shadowBlur}
-          opacity={opacity}
-        />
-      )}
+      {isOverCanvas &&
+        (currentTool.groupId === 3 || currentTool.groupId === 4) && (
+          <Cursor
+            left={positionMove.x * zoomFactor - (lineWidth * zoomFactor) / 2}
+            top={positionMove.y * zoomFactor - (lineWidth * zoomFactor) / 2}
+            width={lineWidth * zoomFactor}
+            height={lineWidth * zoomFactor}
+          />
+        )}
 
       <ElementBuilder
         canvasRef={auxCanvas}
