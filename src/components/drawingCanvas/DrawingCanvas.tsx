@@ -305,6 +305,7 @@ const DrawingCanvas = ({
         break;
 
       case 3:
+        drawDot();
         paintShape();
         break;
 
@@ -450,6 +451,16 @@ const DrawingCanvas = ({
     positionDown.x = positionMove.x;
     positionDown.y = positionMove.y;
     setLassoPoints((prev) => [...prev, positionMove]);
+  };
+
+  const drawDot = () => {
+    if (!mainCtxRef.current) return;
+    mainCtxRef.current.beginPath();
+    mainCtxRef.current.lineTo(
+      positionMove.x / zoomFactor,
+      positionMove.y / zoomFactor
+    );
+    mainCtxRef.current.stroke();
   };
 
   const drawRectangle = () => {
