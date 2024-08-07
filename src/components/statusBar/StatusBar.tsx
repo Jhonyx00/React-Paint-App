@@ -25,19 +25,11 @@ const StatusBar = ({
     <div className="status-bar">
       <div className="text">
         <span className="dimension">
-          Size:{" "}
-          <b>
-            {parentSize.width}, {parentSize.height}pixels
-          </b>
+          Size: {`${parentSize.width},${parentSize.height}pixels`}
         </span>
-        <span className="current-tool">
-          Selected: <b>{currentTool}</b>
-        </span>
+        <span className="current-tool">Selected: {`${currentTool}`}</span>
         <span className="position">
-          Position:{" "}
-          <b>
-            {cursorPosition.x}, {cursorPosition.y}pixels
-          </b>
+          Position: {`${cursorPosition.x}, ${cursorPosition.y}pixels`}
         </span>
       </div>
 
