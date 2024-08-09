@@ -5,14 +5,14 @@ const Canvas = ({
   size,
 }: {
   canvasRef: React.RefObject<HTMLCanvasElement>;
-  size?: Dimension;
+  size: Dimension;
 }) => {
   return (
     <canvas
       className="canvas"
       ref={canvasRef}
-      width={size?.width}
-      height={size?.height}
+      width={size.width}
+      height={size.height}
     ></canvas>
   );
 };

@@ -5,6 +5,7 @@
   transform: scale(0);
   border: 1.4px solid white;
   outline: 1.4px solid black;
+  z-index: 1;
 }
 
 @keyframes grow {

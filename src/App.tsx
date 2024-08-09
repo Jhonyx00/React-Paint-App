@@ -26,6 +26,7 @@ import { ZOOM_STEP } from "./constants/canvasConfig.ts";
 
 //Styles
 import "./App.css";
+import { Rect } from "./interfaces/Rect.ts";
 
 const App = () => {
   //Refs
@@ -40,11 +41,28 @@ const App = () => {
   const [shadowBlur, setShadowBlur] = useState<number>(0);
   const [isMoving, setIsMoving] = useState<boolean>(false);
   const [XY, setXY] = useState<Point>({ x: 0, y: 0 });
-  const [elementPosition, setElementPosition] = useState({ left: 0, top: 0 });
+  // const [elementPosition, setElementPosition] = useState({ left: 0, top: 0 });
+  // const [parentSize, setParentSize] = useState<Dimension>({
+  //   width: 0,
+  //   height: 0,
+  // });
 
   const [transition, setTransition] = useState<boolean>(false);
   const [zoomFactor, setZoomFactor] = useState<number>(100);
-  const [parentSize, setParentSize] = useState<Dimension>({
+
+  const [elementRect, setElementRect] = useState<Rect>({
+    left: 0,
+    top: 0,
+    width: 0,
+    height: 0,
+  });
+
+  const [parentOffset, setParentOffset] = useState<Position>({
+    left: 0,
+    top: 0,
+  });
+
+  const [viewportSize, setViewportSize] = useState<Dimension>({
     width: 0,
     height: 0,
   });
@@ -83,13 +101,15 @@ const App = () => {
         // increase zoom
         setZoomFactor((prev) => prev - ZOOM_STEP);
         // set new element position based on new zoom origin
-        setElementPosition((prev) => ({
+        setElementRect((prev) => ({
+          ...prev,
           left: prev.left + pixelOffset.left,
           top: prev.top + pixelOffset.top,
         }));
       } else {
         setZoomFactor((prev) => prev + ZOOM_STEP);
-        setElementPosition((prev) => ({
+        setElementRect((prev) => ({
+          ...prev,
           left: prev.left - pixelOffset.left,
           top: prev.top - pixelOffset.top,
         }));
@@ -115,11 +135,11 @@ const App = () => {
   }, []);
 
   const calculatePixelOffset = () => {
-    const halfWidth = parentSize.width / 2;
-    const halfHeight = parentSize.height / 2;
+    const halfWidth = elementRect.width / 2;
+    const halfHeight = elementRect.height / 2;
     //zoom origin (always center of the viewport)
-    const viewportCenterX = halfWidth - elementPosition.left;
-    const viewportCenterY = halfHeight - elementPosition.top;
+    const viewportCenterX = halfWidth - elementRect.left;
+    const viewportCenterY = halfHeight - elementRect.top;
     //
     const leftDiff = viewportCenterX / zoomFactor;
     const topDiff = viewportCenterY / zoomFactor;
@@ -131,30 +151,52 @@ const App = () => {
   // init component
   useEffect(() => {
     if (!drawingPanelRef.current) return;
-    // initial size
-    setParentSize({
+    // set size of visible canvas area
+    setViewportSize({
       width: drawingPanelRef.current.clientWidth,
       height: drawingPanelRef.current.clientHeight,
     });
+
+    // set initial size
+    setElementRect((prev) => {
+      if (drawingPanelRef.current)
+        return {
+          ...prev,
+          width: drawingPanelRef.current.clientWidth,
+          height: drawingPanelRef.current.clientHeight,
+        };
+      return prev;
+    });
+
+    const setInitialZoomOrigin = () => {
+      if (drawingPanelRef.current)
+        setPixelOffset({
+          left: drawingPanelRef.current.clientWidth / 2 / ZOOM_STEP,
+          top: drawingPanelRef.current.clientHeight / 2 / ZOOM_STEP,
+        });
+    };
+
+    const setInitialParentOffset = () => {
+      if (drawingPanelRef.current) {
+        const { left, top } = drawingPanelRef.current.getBoundingClientRect();
+        setParentOffset({ left: left, top: top });
+      }
+    };
+
+    // set initial offset
+    setInitialParentOffset();
+
     // first zoom origin is center of canvas
     setInitialZoomOrigin();
   }, []);
-
-  const setInitialZoomOrigin = () => {
-    if (drawingPanelRef.current)
-      setPixelOffset({
-        left: drawingPanelRef.current.clientWidth / 2 / ZOOM_STEP,
-        top: drawingPanelRef.current.clientHeight / 2 / ZOOM_STEP,
-      });
-  };
 
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!e.ctrlKey) return;
     if (transition) setTransition(false);
     setIsMoving(true);
     setXY({
-      x: e.clientX - elementPosition.left,
-      y: e.clientY - elementPosition.top,
+      x: e.clientX - elementRect.left,
+      y: e.clientY - elementRect.top,
     });
   };
 
@@ -177,10 +219,11 @@ const App = () => {
     }
     // on canvas-container (move from any mouse position inside main drawing canvas)
     if (isMoving) {
-      setElementPosition({
+      setElementRect((prev) => ({
+        ...prev,
         left: point.x - XY.x,
         top: point.y - XY.y,
-      });
+      }));
       calculatePixelOffset();
     }
   };
@@ -254,20 +297,21 @@ const App = () => {
 
           <DrawingCanvas
             drawingCanvas={drawingCanvasRef}
-            parentSize={parentSize}
             currentTool={currentTool}
             currentColor={currentColor}
             lineWidth={lineWidth}
             opacity={opacity / 100}
             shadowBlur={shadowBlur}
-            elementPosition={elementPosition}
+            rect={elementRect}
+            parentOffset={parentOffset}
             zoomFactor={zoomFactor / 100}
             setSelected={setSelected}
+            viewportSize={viewportSize}
           />
         </div>
 
         <StatusBar
-          parentSize={parentSize}
+          dimension={elementRect}
           cursorPosition={cursorPosition}
           currentTool={currentTool.name}
           scaleValue={zoomFactor}

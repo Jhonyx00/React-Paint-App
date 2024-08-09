@@ -4,13 +4,13 @@ import { Point } from "../../interfaces/Point";
 import "./statusBar.css";
 import { ZOOM_STEP } from "../../constants/canvasConfig";
 const StatusBar = ({
-  parentSize,
+  dimension,
   cursorPosition,
   currentTool,
   scaleValue,
   setScaleValue,
 }: {
-  parentSize: Dimension;
+  dimension: Dimension;
   cursorPosition: Point;
   currentTool: string;
   scaleValue: number;
@@ -25,7 +25,7 @@ const StatusBar = ({
     <div className="status-bar">
       <div className="text">
         <span className="dimension">
-          Size: {`${parentSize.width},${parentSize.height}pixels`}
+          Size: {`${dimension.width},${dimension.height}pixels`}
         </span>
         <span className="current-tool">Selected: {`${currentTool}`}</span>
         <span className="position">

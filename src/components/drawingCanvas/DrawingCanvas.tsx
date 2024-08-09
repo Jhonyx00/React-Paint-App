@@ -29,29 +29,32 @@ import Canvas from "../canvas/Canvas";
 import "./drawingCanvas.css";
 import { ElementContainer } from "../../interfaces/ElementContainer";
 import ElementBuilder from "../elementContainer/ElementBuilder";
+import { Rect } from "../../interfaces/Rect";
 
 const DrawingCanvas = ({
-  parentSize,
+  rect,
   currentTool,
   currentColor,
   lineWidth,
   opacity,
   shadowBlur,
-  elementPosition,
   zoomFactor,
   drawingCanvas,
   setSelected,
+  viewportSize,
+  parentOffset,
 }: {
-  parentSize: Dimension;
   currentTool: ToolItem;
   currentColor: string;
   lineWidth: number;
   opacity: number;
   shadowBlur: number;
-  elementPosition: Position;
   zoomFactor: number;
   drawingCanvas: RefObject<HTMLDivElement>;
   setSelected: Dispatch<SetStateAction<boolean>>;
+  viewportSize: Dimension;
+  rect: Rect;
+  parentOffset: Position;
 }) => {
   //refs
   const buttons = useRef<HTMLDivElement>(null);
@@ -130,13 +133,15 @@ const DrawingCanvas = ({
   useEffect(() => {
     if (!mainCtxRef.current) return;
     mainCtxRef.current.globalAlpha = opacity;
-    mainCtxRef.current.globalAlpha = opacity;
     mainCtxRef.current.strokeStyle = currentColor;
     mainCtxRef.current.fillStyle = currentColor;
-    mainCtxRef.current.lineWidth = lineWidth / zoomFactor;
-    mainCtxRef.current.shadowBlur = shadowBlur;
-    mainCtxRef.current.shadowColor = currentColor;
+    mainCtxRef.current.lineWidth = lineWidth;
     mainCtxRef.current.lineCap = "round";
+
+    if (currentTool.groupId !== 4) {
+      mainCtxRef.current.shadowBlur = shadowBlur;
+      mainCtxRef.current.shadowColor = currentColor;
+    }
   }, [opacity, currentColor, lineWidth, shadowBlur, zoomFactor]);
 
   //Aux canvas init
@@ -152,14 +157,21 @@ const DrawingCanvas = ({
   useEffect(() => {
     if (!auxCtxRef.current) return;
     auxCtxRef.current.shadowColor = currentColor;
-    auxCtxRef.current.shadowBlur = shadowBlur;
     auxCtxRef.current.globalAlpha = opacity;
+    // auxCtxRef.current.lineWidth = lineWidth;
   }, [opacity, shadowBlur, currentColor]);
 
   useEffect(() => {
     setElementContainer((prev) => ({ ...prev, background: currentColor }));
     if (textArea.current) textArea.current.style.color = currentColor;
   }, [currentColor]);
+
+  useEffect(() => {
+    // const hasSize = elementContainer.width > 0 && elementContainer.height > 0;
+    // if (pointerState === "onElementContainer" && hasSize) {
+    //   // console.log("pintar todo");
+    // }
+  }, [currentTool]);
 
   ///events
   const handleMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
@@ -177,7 +189,15 @@ const DrawingCanvas = ({
     switch (event.target) {
       case mainCanvas.current:
         /// click on canvas, and perform the last action
-        setMouseDownPosition(scaledPoint);
+        if (currentTool.groupId === 3 || currentTool.groupId === 4) {
+          setMouseDownPosition({
+            x: (point.x - parentOffset.left) / zoomFactor,
+            y: (point.y - parentOffset.top) / zoomFactor,
+          });
+        } else {
+          setMouseDownPosition(scaledPoint);
+        }
+
         setPointerState("onCanvas");
         setSelected(false);
 
@@ -246,6 +266,10 @@ const DrawingCanvas = ({
         resetElementContainerRefProps();
         break;
 
+      case 3:
+        drawLine();
+        break;
+
       case 2:
         setSelectionImageValues();
         resetElementContainerRefProps();
@@ -253,8 +277,9 @@ const DrawingCanvas = ({
 
       case 4:
         if (mainCtxRef.current) {
-          mainCtxRef.current.globalCompositeOperation = "source-over";
+          mainCtxRef.current.globalCompositeOperation = "destination-out";
         }
+        drawLine();
         break;
 
       case 5:
@@ -271,6 +296,27 @@ const DrawingCanvas = ({
       default:
         break;
     }
+  };
+
+  const drawLine = () => {
+    const { left, top } = elementContainer;
+    const img = new Image();
+    if (auxCanvas.current) img.src = auxCanvas.current.toDataURL();
+    requestAnimationFrame(
+      (img.onload = () => {
+        if (mainCtxRef.current) {
+          mainCtxRef.current.drawImage(
+            img,
+            left,
+            top,
+            viewportSize.width / zoomFactor,
+            viewportSize.height / zoomFactor
+          );
+        }
+      })
+    );
+    resetElementContainerProps();
+    setAuxCanvasDimension(viewportSize);
   };
 
   const [isOverCanvas, setIsOverCanvas] = useState<boolean>(false);
@@ -298,6 +344,9 @@ const DrawingCanvas = ({
   };
 
   const performCanvasAction = (point: Point) => {
+    if (mainCtxRef.current)
+      mainCtxRef.current.globalCompositeOperation = "source-over";
+
     switch (currentTool.groupId) {
       case 1:
         paintShape();
@@ -307,12 +356,32 @@ const DrawingCanvas = ({
       case 3:
         drawDot();
         paintShape();
+        setElementContainer((prev) => ({
+          ...prev,
+          left: 0 - rect.left / zoomFactor,
+          top: 0 - rect.top / zoomFactor,
+          width: viewportSize.width * (1 / zoomFactor),
+          height: viewportSize.height * (1 / zoomFactor),
+        }));
         break;
 
+      case 4:
+        if (mainCtxRef.current)
+          mainCtxRef.current.globalCompositeOperation = "destination-out";
+
+        setElementContainer((prev) => ({
+          ...prev,
+          left: 0 - rect.left / zoomFactor,
+          top: 0 - rect.top / zoomFactor,
+          width: viewportSize.width * (1 / zoomFactor),
+          height: viewportSize.height * (1 / zoomFactor),
+        }));
+
+        break;
       case 2:
         /* if the tool is changed, 
         shape container background needs to be cleared by setting its width and height */
-        setAuxCanvasDimension(300, 150);
+        setAuxCanvasDimension({ width: 300, height: 150 });
         if (!isImagePlaced) return;
         resetCtxAux(); // reset options like opacity, shadow blur, etc
         fillWhite();
@@ -321,14 +390,8 @@ const DrawingCanvas = ({
         setAuxCanvasBg("transparent");
         break;
 
-      case 4:
-        if (mainCtxRef.current) {
-          mainCtxRef.current.globalCompositeOperation = "destination-out";
-        }
-        break;
-
       case 5:
-        setAuxCanvasDimension(300, 150);
+        setAuxCanvasDimension({ width: 300, height: 150 });
         setBounding({
           maxX: 0,
           maxY: 0,
@@ -344,7 +407,7 @@ const DrawingCanvas = ({
         break;
 
       case 10:
-        setAuxCanvasDimension(300, 150);
+        setAuxCanvasDimension({ width: 300, height: 150 });
         /* set an initial value to start comparing in setMinMaxXY function, in order to get box dimensions of ElementContainer */
         setBounding({
           maxX: 0,
@@ -392,10 +455,10 @@ const DrawingCanvas = ({
     auxCtxRef.current?.putImageData(image, 0, 0);
   };
 
-  const setAuxCanvasDimension = (width: number, height: number) => {
+  const setAuxCanvasDimension = (dimension: Dimension) => {
     if (!auxCanvas.current) return;
-    auxCanvas.current.width = width;
-    auxCanvas.current.height = height;
+    auxCanvas.current.width = dimension.width;
+    auxCanvas.current.height = dimension.height;
   };
 
   const paintShape = () => {
@@ -433,33 +496,30 @@ const DrawingCanvas = ({
     }
   };
 
-  const drawLine = (): void => {
-    if (!mainCtxRef.current) return;
-    mainCtxRef.current.save();
-    mainCtxRef.current.scale(zoomFactor, zoomFactor);
-    mainCtxRef.current.beginPath();
-    mainCtxRef.current.moveTo(
-      positionDown.x / zoomFactor,
-      positionDown.y / zoomFactor
-    );
-    mainCtxRef.current.lineTo(
-      positionMove.x / zoomFactor,
-      positionMove.y / zoomFactor
-    );
-    mainCtxRef.current.stroke();
-    mainCtxRef.current.restore();
-    positionDown.x = positionMove.x;
-    positionDown.y = positionMove.y;
-    setLassoPoints((prev) => [...prev, positionMove]);
-  };
+  // const drawLine = (): void => {
+  //   if (!mainCtxRef.current) return;
+  //   mainCtxRef.current.save();
+  //   mainCtxRef.current.scale(zoomFactor, zoomFactor);
+  //   mainCtxRef.current.beginPath();
+  //   mainCtxRef.current.moveTo(
+  //     positionDown.x / zoomFactor,
+  //     positionDown.y / zoomFactor
+  //   );
+  //   mainCtxRef.current.lineTo(
+  //     positionMove.x / zoomFactor,
+  //     positionMove.y / zoomFactor
+  //   );
+  //   mainCtxRef.current.stroke();
+  //   mainCtxRef.current.restore();
+  //   positionDown.x = positionMove.x;
+  //   positionDown.y = positionMove.y;
+  //   setLassoPoints((prev) => [...prev, positionMove]);
+  // };
 
   const drawDot = () => {
     if (!mainCtxRef.current) return;
     mainCtxRef.current.beginPath();
-    mainCtxRef.current.lineTo(
-      positionMove.x / zoomFactor,
-      positionMove.y / zoomFactor
-    );
+    mainCtxRef.current.lineTo(positionMove.x, positionMove.y);
     mainCtxRef.current.stroke();
   };
 
@@ -746,7 +806,7 @@ const DrawingCanvas = ({
     if (!mainCtxRef.current) return;
     if (width <= 0 && height <= 0) return;
     const image = mainCtxRef.current.getImageData(left, top, width, height);
-    setAuxCanvasDimension(image.width, image.height);
+    setAuxCanvasDimension({ width: image.width, height: image.height });
     setAuxCanvasBg(background);
     setAuxCanvasImageData(image);
     setIsImagePlaced(true);
@@ -849,7 +909,10 @@ const DrawingCanvas = ({
         break;
       case 3:
       case 4:
-        drawLine();
+        // drawLine();
+        // drawElementContainer();
+        // setMinMaxXY();
+        // setLassoFrame("");
         break;
 
       case 5:
@@ -1100,6 +1163,8 @@ const DrawingCanvas = ({
   };
 
   const moveElementContainer = (point: Point) => {
+    // if (currentTool.groupId === 3) return;
+
     setElementContainer((prev) => ({
       ...prev,
       top: point.y - XY.y,
@@ -1129,14 +1194,14 @@ const DrawingCanvas = ({
       onMouseLeave={handleMouseLeave}
       ref={drawingCanvas}
       style={{
-        left: `${elementPosition.left}px`,
-        top: `${elementPosition.top}px`,
-        width: `${zoomFactor * parentSize.width}px`,
-        height: `${zoomFactor * parentSize.height}px`,
+        left: `${rect.left}px`,
+        top: `${rect.top}px`,
+        width: `${zoomFactor * rect.width}px`,
+        height: `${zoomFactor * rect.height}px`,
         // transition: transition ? "left 400ms ease-in-out" : "",
       }}
     >
-      <Canvas canvasRef={mainCanvas} size={parentSize} />
+      <Canvas canvasRef={mainCanvas} size={rect} />
 
       {isOverCanvas &&
         (currentTool.groupId === 3 || currentTool.groupId === 4) && (
@@ -1152,10 +1217,8 @@ const DrawingCanvas = ({
         canvasRef={auxCanvas}
         buttonsRef={buttons}
         textArea={textArea}
-        setResizeButtonId={setResizeButtonId}
         tool={currentTool.groupId}
         text={text}
-        setText={setText}
         zoomFactor={zoomFactor}
         rect={{
           top: elementContainer.top * zoomFactor,
@@ -1163,6 +1226,12 @@ const DrawingCanvas = ({
           width: elementContainer.width * zoomFactor,
           height: elementContainer.height * zoomFactor,
         }}
+        positionDown={positionDown}
+        lineWidth={lineWidth}
+        color={currentColor}
+        viewportSize={viewportSize}
+        setText={setText}
+        setResizeButtonId={setResizeButtonId}
       />
     </div>
   );
