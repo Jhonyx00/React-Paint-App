@@ -14,10 +14,10 @@ const ElementBuilder = ({
   textArea,
   zoomFactor,
   text,
-  positionDown,
-  lineWidth,
-  color,
-  viewportSize,
+  //positionDown,
+  //lineWidth,
+  //color,
+  //viewportSize,
   setText,
   setResizeButtonId,
 }: {
@@ -28,10 +28,10 @@ const ElementBuilder = ({
   textArea: RefObject<HTMLTextAreaElement>;
   zoomFactor: number;
   text: string;
-  positionDown: Point;
-  lineWidth: number;
-  color: string;
-  viewportSize: Dimension;
+  // positionDown: Point;
+  // lineWidth: number;
+  // color: string;
+  // viewportSize: Dimension;
   setText: Dispatch<SetStateAction<string>>;
   setResizeButtonId: Dispatch<SetStateAction<number>>;
 }) => {
@@ -53,40 +53,40 @@ const ElementBuilder = ({
     ctxRef.current = ctx;
   }, [canvasRef]);
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (tool === 3 || tool === 4) {
-      const point = {
-        x: e.nativeEvent.offsetX / zoomFactor,
-        y: e.nativeEvent.offsetY / zoomFactor,
-      };
+  // const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+  //   if (tool === 3 || tool === 4) {
+  //     const point = {
+  //       x: e.nativeEvent.offsetX / zoomFactor,
+  //       y: e.nativeEvent.offsetY / zoomFactor,
+  //     };
 
-      if (!ctxRef.current) return;
-      ctxRef.current.save();
-      ctxRef.current.scale(zoomFactor, zoomFactor);
-      ctxRef.current.beginPath();
-      ctxRef.current.moveTo(positionDown.x, positionDown.y);
-      ctxRef.current.lineTo(point.x, point.y);
-      ctxRef.current.stroke();
-      ctxRef.current.restore();
-      positionDown.x = point.x;
-      positionDown.y = point.y;
-    }
-  };
+  //     if (!ctxRef.current) return;
+  //     ctxRef.current.save();
+  //     ctxRef.current.scale(zoomFactor, zoomFactor);
+  //     ctxRef.current.beginPath();
+  //     ctxRef.current.moveTo(positionDown.x, positionDown.y);
+  //     ctxRef.current.lineTo(point.x, point.y);
+  //     ctxRef.current.stroke();
+  //     ctxRef.current.restore();
+  //     positionDown.x = point.x;
+  //     positionDown.y = point.y;
+  //   }
+  // };
 
-  const handleMouseOver = () => {
-    if (ctxRef.current) {
-      ctxRef.current.strokeStyle = tool === 4 ? "white" : color;
-      ctxRef.current.lineCap = "round";
-      ctxRef.current.lineWidth = lineWidth;
-    }
-  };
+  // const handleMouseOver = () => {
+  //   if (ctxRef.current) {
+  //     ctxRef.current.strokeStyle = tool === 4 ? "white" : color;
+  //     ctxRef.current.lineCap = "round";
+  //     ctxRef.current.lineWidth = lineWidth;
+  //   }
+  // };
 
   return (
     <div
       className="element-container"
       style={rect}
-      onMouseMove={handleMouseMove}
-      onMouseOver={handleMouseOver}
+      // onMouseMove={handleMouseMove}
+      // onMouseOver={handleMouseOver}
     >
       <div className="btn-container">
         {tool === 6 ? (
@@ -101,10 +101,11 @@ const ElementBuilder = ({
         ) : (
           <Canvas
             canvasRef={canvasRef}
-            size={{
-              width: tool === 3 || tool === 4 ? viewportSize.width : 300,
-              height: tool === 3 || tool === 4 ? viewportSize.height : 150,
-            }}
+            // size={{
+            //   width: tool === 3 || tool === 4 ? viewportSize.width : 300,
+            //   height: tool === 3 || tool === 4 ? viewportSize.height : 150,
+            // }}
+            size={{ width: 300, height: 150 }}
           />
         )}
 

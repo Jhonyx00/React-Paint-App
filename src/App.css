@@ -19,4 +19,15 @@
       background-color: rgb(42, 73, 141);
     }
   }
+
+  .minimap {
+    width: max-content;
+    background-color: lightgray;
+    border: 1px solid black;
+    padding: 0.4em;
+
+    img {
+      background-color: white;
+    }
+  }
 }

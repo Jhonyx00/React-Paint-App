@@ -85,6 +85,8 @@ const App = () => {
 
   const [key, setKey] = useState<string>("");
 
+  const [minimapImage, setMinimapImage] = useState<string>("");
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const key = e.key;
@@ -134,6 +136,10 @@ const App = () => {
     };
   }, []);
 
+  // useEffect(() => {
+  //   // console.log(minimapImage);
+  // }, [minimapImage]);
+
   const calculatePixelOffset = () => {
     const halfWidth = elementRect.width / 2;
     const halfHeight = elementRect.height / 2;
@@ -152,9 +158,11 @@ const App = () => {
   useEffect(() => {
     if (!drawingPanelRef.current) return;
     // set size of visible canvas area
+    console.log(drawingPanelRef.current.getBoundingClientRect());
+
     setViewportSize({
-      width: drawingPanelRef.current.clientWidth,
-      height: drawingPanelRef.current.clientHeight,
+      width: drawingPanelRef.current.getBoundingClientRect().width,
+      height: drawingPanelRef.current.getBoundingClientRect().height,
     });
 
     // set initial size
@@ -303,11 +311,21 @@ const App = () => {
             opacity={opacity / 100}
             shadowBlur={shadowBlur}
             rect={elementRect}
-            parentOffset={parentOffset}
+            // parentOffset={parentOffset}
             zoomFactor={zoomFactor / 100}
             setSelected={setSelected}
             viewportSize={viewportSize}
+            setMinimapImage={setMinimapImage}
           />
+          {/* <div
+            className="minimap"
+            style={{
+              width: `${elementRect.width / 10}px`,
+              height: ` ${elementRect.height / 10}px`,
+            }}
+          >
+            <img src={minimapImage} alt="" />
+          </div> */}
         </div>
 
         <StatusBar
@@ -316,6 +334,17 @@ const App = () => {
           currentTool={currentTool.name}
           scaleValue={zoomFactor}
           setScaleValue={setZoomFactor}
+        />
+      </div>
+
+      <div className="minimap">
+        <img
+          src={minimapImage ? minimapImage : ""}
+          alt=""
+          style={{
+            width: `${elementRect.width / 8}px`,
+            height: ` ${elementRect.height / 8}px`,
+          }}
         />
       </div>
     </div>
