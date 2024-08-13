@@ -110,9 +110,14 @@ const DrawingCanvas = ({
   });
 
   const [pointerState, setPointerState] = useState<
-    "onElementContainer" | "onResizeButton" | "onCanvas" | "onTextArea"
-  >();
+    | "onElementContainer"
+    | "onResizeButton"
+    | "onCanvas"
+    | "onTextArea"
+    | "onDrawingPanel"
+  >("onDrawingPanel");
 
+  const [isRendered, setIsRendered] = useState<boolean>(false);
   //main canvas init
   useEffect(() => {
     if (!mainCanvas.current) return;
@@ -153,13 +158,14 @@ const DrawingCanvas = ({
     auxCtxRef.current = auxCtx;
   }, []);
 
-  //Aux Canvas options
-  useEffect(() => {
-    if (!auxCtxRef.current) return;
-    auxCtxRef.current.shadowColor = currentColor;
-    auxCtxRef.current.globalAlpha = opacity;
-    // auxCtxRef.current.lineWidth = lineWidth;
-  }, [opacity, shadowBlur, currentColor]);
+  // //Aux Canvas options
+  // useEffect(() => {
+  //   if (!auxCtxRef.current) return;
+  //   auxCtxRef.current.shadowColor = currentColor;
+  //   auxCtxRef.current.globalAlpha = opacity;
+  //   auxCtxRef.current.fillStyle = currentColor;
+  //   // auxCtxRef.current.lineWidth = lineWidth;
+  // }, [opacity, shadowBlur, currentColor]);
 
   useEffect(() => {
     setElementContainer((prev) => ({ ...prev, background: currentColor }));
@@ -179,8 +185,9 @@ const DrawingCanvas = ({
     setIsDrawing(true);
 
     if (!mainCanvas.current) return;
-    const { left, top } = mainCanvas.current.getBoundingClientRect();
+
     const point = { x: event.clientX, y: event.clientY };
+    const { left, top } = mainCanvas.current.getBoundingClientRect();
     const scaledPoint = getScaledPoint(point, zoomFactor, {
       left,
       top,
@@ -189,7 +196,12 @@ const DrawingCanvas = ({
     switch (event.target) {
       case mainCanvas.current:
         /// click on canvas, and perform the last action
-        if (currentTool.groupId === 3 || currentTool.groupId === 4) {
+        if (
+          currentTool.groupId === 3 ||
+          currentTool.groupId === 4 ||
+          currentTool.groupId === 5 ||
+          currentTool.groupId === 10
+        ) {
           setMouseDownPosition({
             x: (point.x - parentOffset.left) / zoomFactor,
             y: (point.y - parentOffset.top) / zoomFactor,
@@ -199,12 +211,19 @@ const DrawingCanvas = ({
         }
 
         setPointerState("onCanvas");
+
         setSelected(false);
+        setIsRendered(false);
 
         if (elementContainer.width > 0 && elementContainer.height > 0)
           resetElementContainerProps();
 
+        setElementContainer((prev) => ({
+          ...prev,
+          name: currentTool.name,
+        }));
         performCanvasAction(scaledPoint);
+
         break;
 
       case buttons.current:
@@ -261,6 +280,7 @@ const DrawingCanvas = ({
 
   const handleMouseUp = () => {
     setIsDrawing(false);
+
     switch (currentTool.groupId) {
       case 1:
         resetElementContainerRefProps();
@@ -268,6 +288,9 @@ const DrawingCanvas = ({
 
       case 3:
         drawLine();
+        resetElementContainerProps();
+        //clear auxCanvas path to prevent overlap with the main canvas
+        setAuxCanvasDimension(viewportSize);
         break;
 
       case 2:
@@ -280,13 +303,35 @@ const DrawingCanvas = ({
           mainCtxRef.current.globalCompositeOperation = "destination-out";
         }
         drawLine();
+        resetElementContainerProps();
+        setAuxCanvasDimension(viewportSize);
         break;
 
       case 5:
-      case 10:
-        setLassoValues();
-        setLassoPath(lassoPoints);
         resetElementContainerRefProps();
+        // if (isRendered) return;
+        // if (pointerState === "onCanvas") {
+        if (!isRendered && pointerState === "onCanvas") {
+          clearElementContainer();
+          resetElementContainerProps();
+          if (!isImagePlaced && lassoPoints.length > 0) setLassoFrame();
+          setLassoPath(lassoPoints);
+          setScaleRelativeToParent();
+          fillPath();
+        }
+        setIsRendered(true);
+        break;
+
+      case 10:
+        resetElementContainerRefProps();
+        if (isRendered) return;
+        if (!isRendered && pointerState === "onCanvas") {
+          clearElementContainer();
+          resetElementContainerProps();
+          if (!isImagePlaced && lassoPoints.length > 0) setLassoFrame();
+          setLassoPath(lassoPoints);
+        }
+        setIsRendered(true);
         break;
 
       case 6:
@@ -298,25 +343,61 @@ const DrawingCanvas = ({
     }
   };
 
+  const fillPath = () => {
+    const shapePath = getLassoPath({
+      x: bounding.minX,
+      y: bounding.minY,
+    });
+
+    auxCtxRef.current?.fill(shapePath);
+  };
+
+  const clearElementContainer = () => {
+    const { width, height } = elementContainer;
+    auxCtxRef.current?.clearRect(0, 0, width * zoomFactor, height * zoomFactor);
+  };
+  // scale the aux canvas to fit its boundaries
+  const setScaleRelativeToParent = () => {
+    const elementSize: Dimension = {
+      width: bounding.maxX - bounding.minX,
+      height: bounding.maxY - bounding.minY,
+    };
+
+    auxCtxRef.current?.scale(
+      viewportSize.width / elementSize.width,
+      viewportSize.height / elementSize.height
+    );
+  };
+
+  const getLassoPath = (initialPoint: Point) => {
+    const { left, top } = elementContainer;
+    const shapePath = new Path2D();
+    auxCtxRef.current?.translate(-initialPoint.x + left, -initialPoint.y + top);
+
+    for (let i = 0; i < lassoPoints.length; i++) {
+      const path = lassoPoints[i];
+      shapePath.lineTo(path.x - left, path.y - top);
+    }
+    shapePath.closePath();
+
+    return shapePath;
+  };
+
   const drawLine = () => {
     const { left, top } = elementContainer;
     const img = new Image();
     if (auxCanvas.current) img.src = auxCanvas.current.toDataURL();
-    requestAnimationFrame(
-      (img.onload = () => {
-        if (mainCtxRef.current) {
-          mainCtxRef.current.drawImage(
-            img,
-            left,
-            top,
-            viewportSize.width / zoomFactor,
-            viewportSize.height / zoomFactor
-          );
-        }
-      })
-    );
-    resetElementContainerProps();
-    setAuxCanvasDimension(viewportSize);
+    requestAnimationFrame(() => {
+      if (mainCtxRef.current) {
+        mainCtxRef.current.drawImage(
+          img,
+          left,
+          top,
+          viewportSize.width / zoomFactor,
+          viewportSize.height / zoomFactor
+        );
+      }
+    });
   };
 
   const [isOverCanvas, setIsOverCanvas] = useState<boolean>(false);
@@ -338,6 +419,8 @@ const DrawingCanvas = ({
       setSelection("transparent");
       setLassoImage();
       clearLassoSelection();
+
+      // setIrregularShape()
     } else if (currentTool.groupId === 5) {
       setIrregularShape();
     }
@@ -350,11 +433,13 @@ const DrawingCanvas = ({
     switch (currentTool.groupId) {
       case 1:
         paintShape();
+        setAuxCanvasDimension({ width: 300, height: 150 });
         setPath(currentTool.id);
+
         break;
 
       case 3:
-        drawDot();
+        // drawDot();
         paintShape();
         setElementContainer((prev) => ({
           ...prev,
@@ -391,13 +476,21 @@ const DrawingCanvas = ({
         break;
 
       case 5:
-        setAuxCanvasDimension({ width: 300, height: 150 });
+        setAuxCanvasDimension(viewportSize);
+        // setAuxCanvasDimension({ width: 300, height: 150 });
         setBounding({
           maxX: 0,
           maxY: 0,
           minX: point.x,
           minY: point.y,
         });
+        setElementContainer((prev) => ({
+          ...prev,
+          left: 0 - rect.left / zoomFactor,
+          top: 0 - rect.top / zoomFactor,
+          width: viewportSize.width * (1 / zoomFactor),
+          height: viewportSize.height * (1 / zoomFactor),
+        }));
         if (lassoPoints.length > 0) setLassoPoints([]);
 
         if (!isImagePlaced) return;
@@ -407,7 +500,7 @@ const DrawingCanvas = ({
         break;
 
       case 10:
-        setAuxCanvasDimension({ width: 300, height: 150 });
+        setAuxCanvasDimension(viewportSize);
         /* set an initial value to start comparing in setMinMaxXY function, in order to get box dimensions of ElementContainer */
         setBounding({
           maxX: 0,
@@ -415,6 +508,13 @@ const DrawingCanvas = ({
           minX: point.x,
           minY: point.y,
         });
+        setElementContainer((prev) => ({
+          ...prev,
+          left: 0 - rect.left / zoomFactor,
+          top: 0 - rect.top / zoomFactor,
+          width: viewportSize.width * (1 / zoomFactor),
+          height: viewportSize.height * (1 / zoomFactor),
+        }));
         if (lassoPoints.length > 0) setLassoPoints([]);
 
         if (!isImagePlaced) return;
@@ -694,11 +794,11 @@ const DrawingCanvas = ({
   const setPath = (id: number) => {
     if (!auxCtxRef.current) return;
     if (id < 0) {
-      auxCtxRef.current.clearRect(0, 0, 300, 150);
+      clearElementContainer();
     } else {
       const path = new Path2D(shapes[id - 1].path);
-      auxCtxRef.current.fillStyle = elementContainer.background;
-      auxCtxRef.current.clearRect(0, 0, 300, 150);
+      auxCtxRef.current.fillStyle = currentColor;
+      clearElementContainer();
       auxCtxRef.current.fill(path);
     }
   };
@@ -716,7 +816,6 @@ const DrawingCanvas = ({
       height: newHeight,
       referenceWidth: newWidth,
       referenceHeight: newHeight,
-      name: currentTool.name,
     });
 
     // Quadrant 1
@@ -819,6 +918,7 @@ const DrawingCanvas = ({
 
   const clearLassoSelection = () => {
     const { left, top } = elementContainer;
+
     selectionImage.onload = () => {
       if (!mainCtxRef.current) return;
       mainCtxRef.current.translate(left, top);
@@ -866,14 +966,13 @@ const DrawingCanvas = ({
   };
 
   const setLassoImage = () => {
-    const { left, top, width, height } = elementContainer;
+    const { left, top } = elementContainer;
     const img = new Image();
     if (!auxCanvas.current) return;
     img.src = auxCanvas.current.toDataURL();
 
     img.onload = () => {
-      auxCtxRef.current?.clearRect(0, 0, width, height); //important
-
+      clearElementContainer(); //important
       setShapePath(new Path2D()); //reset the path in each selection to erase correctly on canvas
 
       for (let i = 0; i < lassoPath.length; i++)
@@ -907,27 +1006,20 @@ const DrawingCanvas = ({
       case 6:
         drawElementContainer();
         break;
-      case 3:
-      case 4:
-        // drawLine();
-        // drawElementContainer();
-        // setMinMaxXY();
-        // setLassoFrame("");
-        break;
-
       case 5:
       case 10:
-        drawLasso();
+        setMinMaxXY();
+        setLassoPoints((prev) => [...prev, positionMove]);
         break;
       default:
         break;
     }
   };
 
-  const drawLasso = () => {
-    drawLine();
-    setMinMaxXY();
-  };
+  // const drawLasso = () => {
+  //   // drawLine();
+  //   setMinMaxXY();
+  // };
 
   const setMinMaxXY = () => {
     if (positionMove.x < bounding.minX) {
@@ -944,17 +1036,7 @@ const DrawingCanvas = ({
     }
   };
 
-  const setLassoValues = () => {
-    if (isImagePlaced) return;
-    if (lassoPoints.length <= 0) return;
-    if (currentTool.groupId === 10) {
-      setLassoFrame("Lasso");
-    } else if (currentTool.groupId === 5) {
-      setLassoFrame("IrregularShape");
-    }
-  };
-
-  const setLassoFrame = (toolName: string) => {
+  const setLassoFrame = () => {
     const frameWidth = bounding.maxX - bounding.minX;
     const frameHeight = bounding.maxY - bounding.minY;
 
@@ -964,7 +1046,6 @@ const DrawingCanvas = ({
       top: bounding.minY,
       width: frameWidth,
       height: frameHeight,
-      componentClass: toolName,
     }));
   };
 
@@ -1232,6 +1313,10 @@ const DrawingCanvas = ({
         viewportSize={viewportSize}
         setText={setText}
         setResizeButtonId={setResizeButtonId}
+        pointerState={pointerState}
+        isRendered={isRendered}
+        shadowBlur={shadowBlur}
+        opacity={opacity}
       />
     </div>
   );

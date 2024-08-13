@@ -20,6 +20,10 @@ const ElementBuilder = ({
   viewportSize,
   setText,
   setResizeButtonId,
+  pointerState,
+  isRendered,
+  shadowBlur,
+  opacity,
 }: {
   rect: Rect;
   canvasRef: RefObject<HTMLCanvasElement>;
@@ -34,15 +38,16 @@ const ElementBuilder = ({
   viewportSize: Dimension;
   setText: Dispatch<SetStateAction<string>>;
   setResizeButtonId: Dispatch<SetStateAction<number>>;
+  isRendered: boolean;
+  shadowBlur: number;
+  opacity: number;
+  pointerState:
+    | "onElementContainer"
+    | "onResizeButton"
+    | "onCanvas"
+    | "onTextArea"
+    | "onDrawingPanel";
 }) => {
-  const handleButtonMouseDown = (buttonId: number) => {
-    setResizeButtonId(buttonId);
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setText(e.currentTarget.value);
-  };
-
   const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
 
   useEffect(() => {
@@ -53,8 +58,19 @@ const ElementBuilder = ({
     ctxRef.current = ctx;
   }, [canvasRef]);
 
+  const handleButtonMouseDown = (buttonId: number) => {
+    setResizeButtonId(buttonId);
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setText(e.currentTarget.value);
+  };
+
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (tool === 3 || tool === 4) {
+    if (pointerState === "onResizeButton") return;
+
+    if (isRendered) return;
+    if (tool === 3 || tool === 4 || tool === 5 || tool === 10) {
       const point = {
         x: e.nativeEvent.offsetX / zoomFactor,
         y: e.nativeEvent.offsetY / zoomFactor,
@@ -75,16 +91,30 @@ const ElementBuilder = ({
 
   const handleMouseOver = () => {
     if (ctxRef.current) {
-      ctxRef.current.strokeStyle = tool === 4 ? "white" : color;
       ctxRef.current.lineCap = "round";
-      ctxRef.current.lineWidth = lineWidth;
+      ctxRef.current.fillStyle = color;
+      ctxRef.current.globalAlpha = opacity;
+      ctxRef.current.strokeStyle = tool === 4 ? "white" : color;
+      ctxRef.current.strokeStyle = tool === 10 ? "gray" : color;
+      ctxRef.current.lineWidth =
+        tool === 10 || tool === 5 ? 2 / zoomFactor : lineWidth;
+      ctxRef.current.shadowColor = color;
+      ctxRef.current.shadowBlur = shadowBlur;
+      ctxRef.current.globalCompositeOperation =
+        tool === 10 ? "difference" : "source-over";
     }
   };
 
   return (
     <div
       className="element-container"
-      style={rect}
+      style={{
+        left: rect.left,
+        top: rect.top,
+        width: rect.width,
+        height: rect.height,
+        cursor: tool !== 3 && tool !== 4 ? "move" : "crosshair",
+      }}
       onMouseMove={handleMouseMove}
       onMouseOver={handleMouseOver}
     >
@@ -102,8 +132,14 @@ const ElementBuilder = ({
           <Canvas
             canvasRef={canvasRef}
             size={{
-              width: tool === 3 || tool === 4 ? viewportSize.width : 300,
-              height: tool === 3 || tool === 4 ? viewportSize.height : 150,
+              width:
+                tool === 3 || tool === 4 || tool === 5 || tool === 10
+                  ? viewportSize.width
+                  : 300,
+              height:
+                tool === 3 || tool === 4 || tool === 5 || tool === 10
+                  ? viewportSize.height
+                  : 150,
             }}
           />
         )}
